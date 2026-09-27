@@ -115,7 +115,9 @@ def make_handler(code, upstream, limiter, ip_header=None):
                     'h1{font:500 32px/1.1 Georgia,serif;margin:0 0 8px}h1 span{color:#2f6b4f}p{color:#6b6a66}'
                     'input,button{font:inherit;height:36px;padding:0 12px;border:1px solid #e8e6df;border-radius:8px;background:#fff;color:#1f1e1d}'
                     'button{background:#1f1e1d;color:#faf9f5;border-color:#1f1e1d;cursor:pointer}</style>'
-                    '<h1>varelq<span>.</span></h1><p>Enter the access code shared by the team.</p>' + note +
+                    '<h1>varelq<span>.</span></h1><p>Enter the access code shared by the team.</p>'
+                    '<p style="font-size:13px">Jury: the access code is in the README at '
+                    '<a href="https://github.com/karelotm/varelq#readme" style="color:#2f6b4f">github.com/karelotm/varelq</a>.</p>' + note +
                     '<form method="post" action="/__gate"><input name="code" type="password" autocomplete="off" aria-label="Access code" required> '
                     '<button>Continue</button></form>')
             self.reply(401 if message else 200, page, 'text/html; charset=utf-8')
