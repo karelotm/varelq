@@ -193,3 +193,20 @@ class PromptTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class MinorUnitTests(unittest.TestCase):
+    def test_three_decimal_currency_tax_check_passes(self):
+        from decimal import Decimal
+        import documents
+        self.assertEqual(documents.minor_unit('TND'), Decimal('0.001'))
+        self.assertEqual(documents.minor_unit('eur'), Decimal('0.01'))
+        self.assertEqual(documents.minor_unit(None), Decimal('0.01'))
+        cell = lambda v: {'value': v, 'evidence': []}
+        inv = {'reference': cell('INV-1'), 'order_reference': cell(None), 'currency': cell('TND'),
+               'net': cell('1866.50'), 'vat': cell('354.635'), 'total': cell('2221.135'), 'vat_rate': cell('0.19'),
+               'supplier': cell('X'), 'items': []}
+        out = documents.reconcile({'invoice': inv})
+        tax = [c for c in out['checks'] if c.get('kind') == 'tax_vs_rate']
+        self.assertTrue(tax)
+        self.assertEqual(tax[0].get('status'), 'passed', tax[0])

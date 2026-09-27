@@ -184,6 +184,14 @@ SEVERITY = {'total_vs_net_plus_tax': 'high', 'tax_vs_rate': 'medium', 'line_qty_
             'qty_received_vs_ordered': 'high', 'qty_invoiced_vs_received': 'high'}
 
 
+# ISO 4217 currencies with 3 minor-unit decimals (e.g. TND millimes); others round to cents.
+THREE_DECIMAL_CURRENCIES = {'TND', 'BHD', 'KWD', 'OMR', 'JOD', 'IQD', 'LYD'}
+
+
+def minor_unit(currency):
+    return Decimal('0.001') if str(currency or '').strip().upper() in THREE_DECIMAL_CURRENCIES else Decimal('0.01')
+
+
 def reconcile(fields_by_role):
     """Deterministic checks over validated cells. Returns {'checks','findings','limitations'}.
 
@@ -236,7 +244,7 @@ def reconcile(fields_by_role):
         rate = rate / 100  # printed as a percentage, e.g. 19
     if rate is not None and rate <= 1:
         add('tax_vs_rate', None, 'Invoice tax versus printed tax rate', vat,
-            (net * rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if net is not None else None,
+            (net * rate).quantize(minor_unit(currency), rounding=ROUND_HALF_UP) if net is not None else None,
             [c(inv, k) for k in ('net', 'vat', 'vat_rate')], currency, {'invoice': vat})
     else:
         gaps.append('Tax-rate check skipped: no valid explicit single tax rate extracted.')
@@ -247,7 +255,7 @@ def reconcile(fields_by_role):
         line_totals.append(line_total)
         label = val(item, 'sku') or f'line {i}'
         add('line_qty_x_price', f'line-{i}', f'Invoice {label}: quantity × unit price', line_total,
-            (quantity * price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if quantity is not None and price is not None else None,
+            (quantity * price).quantize(minor_unit(currency), rounding=ROUND_HALF_UP) if quantity is not None and price is not None else None,
             [c(item, k) for k in ('quantity', 'unit_price', 'line_total')], currency, {'invoice': line_total})
     if not inv_items:
         gaps.append('No invoice line items extracted.')
