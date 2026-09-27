@@ -19,11 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Third-party material in this repository keeps its own licence:
-- public-data/agentrx/: Microsoft AgentRx / tau-bench data, MIT (see public-data/agentrx/LICENSE.txt)
-- public-data/sroie/: ICDAR 2019 SROIE via zzzDavid/ICDAR-2019-SROIE, MIT (see public-data/sroie/LICENSE)
-- public-data/cord/: CORD v2 by NAVER Clova, CC BY 4.0 (see public-data/cord/LICENSE)
-- dist/assets/fonts/: IBM Plex and Source Serif 4, SIL Open Font License 1.1 (see dist/assets/fonts/OFL.txt)

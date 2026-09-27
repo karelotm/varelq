@@ -47,7 +47,7 @@ Screens from the running app on the seeded demo data (synthetic invoices are lab
 
 ## License
 
-Code: [MIT](LICENSE). Datasets and fonts keep their own licences, listed in [LICENSE](LICENSE) and in the Data section below.
+Code: [MIT](LICENSE). Datasets and fonts keep their own licences, listed in [NOTICE](NOTICE) and in the Data section below.
 
 ## Run it
 
