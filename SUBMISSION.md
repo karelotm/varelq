@@ -18,7 +18,7 @@ GOMYCODE × NVIDIA "Come Build with AI", 27 September 2026. Deadline 17:30 Tunis
 **One-line story** *(form box)*:
 > VARELQ finds the hidden failures in AI operations agents: it pins each failure to the exact step and tool call, groups the recurring patterns, ranks them with evidence, and proves the fix, first by replaying a guard over the recorded runs and then with a live guarded rerun.
 
-**Team:** TODO {team name and members, exactly as in the Final Team Confirmation; lead email must match}
+**Team:** Solo Leveling. One member: Karim El Otmani (team lead). TODO {lead email exactly as in the Final Team Confirmation}
 
 **Tools** *(form box)*:
 > NVIDIA Nemotron 3 Super 120B (NVIDIA Build API) for finding explanations and the guard-lab agent; NVIDIA nemotron-ocr-v2 as a NIM on a Brev L4 behind the public demo (hosted fallback); Python 3.12 standard library + SQLite; vanilla JS ES modules; IBM Plex, Lucide. Built with Claude Code (multi-agent) today on a Codex-built baseline from before the event.
