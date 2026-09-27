@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/zzzDavid/ICDAR-2019-SROIE/blob/27be4271b251c256f695acbade9a801bffe85994/data/box/000.csv",
+  "commit": "27be4271b251c256f695acbade9a801bffe85994",
+  "sha256": "6d467981bddd86522fb1dcda7c6127975fe2cec2c2d4fa87ca2d7765d4cb461a",
+  "transformation": "Removed first eight coordinate columns; retained text and original annotation order. Public receipt transcription, not a three-way matched business record.",
+  "license": "Repository MIT license included.",
+  "image_url": "https://raw.githubusercontent.com/zzzDavid/ICDAR-2019-SROIE/27be4271b251c256f695acbade9a801bffe85994/data/img/000.jpg",
+  "image_sha256": "8b85d2c325c68579b53446177602709a8f8faeeec710912f62b6ad369234887c"
+}

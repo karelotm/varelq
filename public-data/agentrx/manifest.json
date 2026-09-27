@@ -1,0 +1,8 @@
+{
+  "name": "Microsoft AgentRx / tau retail failed trajectories",
+  "url": "https://github.com/microsoft/AgentRx/blob/7a18c79708e7671be15124460f4f7296107c2a55/data/tau_retail/tau_dataset_failed.json",
+  "commit": "7a18c79708e7671be15124460f4f7296107c2a55",
+  "sha256": "17f8b3356d1124274cc7ed0215b5ff696970073dbed57394c60e775d5f85d717",
+  "license": "MIT (repository LICENSE.txt included)",
+  "description": "Recorded agent executions in a simulated retail benchmark; not production customer conversations. Original trajectories are preserved. Ground-truth labels are excluded from inference."
+}
