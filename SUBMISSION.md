@@ -21,7 +21,7 @@ GOMYCODE × NVIDIA "Come Build with AI", 27 September 2026. Deadline 17:30 Tunis
 **Team:** Solo Leveling. One member: Karim El Otmani (team lead). Lead email: info@karelotm.dev (as registered).
 
 **Tools** *(form box)*:
-> NVIDIA Nemotron 3 Super 120B (NVIDIA Build API) for finding explanations and the guard-lab agent; NVIDIA nemotron-ocr-v2 as a NIM on a Brev L4 behind the public demo (hosted fallback); Python 3.12 standard library + SQLite; vanilla JS ES modules; IBM Plex, Lucide. Built with Claude Code (multi-agent) today on a Codex-built baseline from before the event.
+> NVIDIA Nemotron 3 Super 120B (NVIDIA Build API) for finding explanations and the guard-lab agent; NVIDIA nemotron-ocr-v2 as a NIM on a Brev L4 behind the public demo (hosted fallback); Python 3.12 standard library + SQLite; vanilla JS ES modules; IBM Plex, Lucide. Built with Claude Code (multi-agent) today on a Codex-built prototype from earlier in the event (earliest file 11:13 Tunis).
 
 **Next step** *(form box)*:
 > Run VARELQ on SupplyzPro's own agent logs: write a rule pack for their procurement and support policies, replay candidate guards over their recorded runs, and ship the guard with the best trade-off between intercepted failures and false blocks, measured before it goes live.
@@ -123,7 +123,7 @@ The detection logic, the replay, the lab and the frontend the jury sees were wri
 
 **Commits today** (`git log --format="%h %ad %s" --date=format:"%H:%M UTC"`, as of 13:53 UTC; re-run at freeze if more land):
 ```
-a8ed47b 12:02 UTC  Baseline: VARELQ as delivered by Codex   (code written before the event)
+a8ed47b 12:02 UTC  Baseline: VARELQ as delivered by Codex   (Codex, written during the event: earliest file 10:13 UTC = 11:13 Tunis)
 c3aeeb2 13:23 UTC  Rebuild VARELQ: audit-ledger UI, reliability v2, guard lab, hardened NIM client, GPU OCR path
 29d8211 13:47 UTC  Pace hosted NVIDIA calls to stay under trial-key rate limits
 fe2bb05 13:53 UTC  Fix self-hosted OCR route: the nemotron-ocr-v2 NIM serves POST /v1/ocr
