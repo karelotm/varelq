@@ -42,8 +42,14 @@
   left: 0; right: 0; bottom: 0; top: auto; width: auto;
   border-radius: var(--r-panel) var(--r-panel) 0 0; border-bottom: 0;
   padding: var(--s5) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  max-height: 55vh; max-height: 55dvh; overflow-y: auto; overscroll-behavior: contain;
   transition: none;
 }
+.tour-root.tour-sheet.tour-sheet-top .tour-card {
+  top: 0; bottom: auto; border-radius: 0 0 var(--r-panel) var(--r-panel); border-top: 0; border-bottom: 1px solid var(--border);
+  padding: calc(var(--s4) + env(safe-area-inset-top, 0px)) var(--s4) var(--s4);
+}
+.tour-root.tour-sheet .tour-foot { flex-wrap: wrap; }
 
 /* Reduced or no motion: no animated transitions at all. */
 .tour-root.tour-still, .tour-root.tour-still .tour-hole, .tour-root.tour-still .tour-card { transition: none; }

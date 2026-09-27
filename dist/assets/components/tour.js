@@ -50,6 +50,25 @@ function tourParam() {
 const narrow = () => window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
 const drawerMode = () => window.matchMedia && window.matchMedia('(max-width: 960px)').matches;
 
+/** On phones the sidebar is a drawer: open it for steps whose target lives in it, close it otherwise. */
+function inSidebar(step) {
+  if (!step.sel) return false;
+  const el = document.querySelector(step.sel);
+  const sb = document.getElementById('sidebar');
+  return !!(el && sb && sb.contains(el));
+}
+function syncDrawer(step) {
+  if (!drawerMode()) return false;
+  const want = inSidebar(step);
+  const open = document.body.classList.contains('nav-open');
+  if (want === open) return false;
+  const btn = want ? document.querySelector('.menu-btn') : document.querySelector('.scrim[data-action="close-nav"]');
+  if (!btn) return false;
+  btn.click();
+  if (want && state) state.openedDrawer = true;
+  return true;
+}
+
 /** The step's element if it is actually visible to the user, else null. */
 function targetFor(step) {
   if (!step.sel) return null;
@@ -94,6 +113,7 @@ function render() {
       </span>
     </div>`;
   card.dataset.step = step.id;
+  if (syncDrawer(step)) setTimeout(() => { if (state) place(); }, 320);
   const el = targetFor(step);
   if (el) { try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch { /* ignore */ } }
   place();
@@ -125,7 +145,13 @@ function place() {
     hole.hidden = true;
   }
 
-  if (sheet) { card.style.left = ''; card.style.top = ''; card.dataset.side = 'sheet'; return; }
+  if (sheet) {
+    card.style.left = ''; card.style.top = ''; card.dataset.side = 'sheet';
+    const low = !!el && (el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2) > vh * 0.5;
+    root.classList.toggle('tour-sheet-top', low);
+    return;
+  }
+  root.classList.remove('tour-sheet-top');
   const cw = card.offsetWidth;
   const ch = card.offsetHeight;
   const pad = 16; const gap = 16;
@@ -164,8 +190,9 @@ function go(i) {
 /** Close the tour and remember why ('done' | 'skipped'). */
 export function endTour(reason = 'skipped') {
   if (!state) return;
-  const { root, restoreFocus, cleanup } = state;
+  const { root, restoreFocus, cleanup, openedDrawer } = state;
   state = null;
+  if (openedDrawer && document.body.classList.contains('nav-open')) document.querySelector('.scrim[data-action="close-nav"]')?.click();
   cleanup();
   writeFlag(KEY, reason === 'done' ? 'done' : 'skipped');
   root.remove();
