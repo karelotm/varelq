@@ -88,8 +88,8 @@
 /* Main */
 main { flex: 1; width: 100%; max-width: var(--content-max); padding: var(--s7) var(--s6) var(--s8); margin: 0 auto; min-width: 0; }
 main:focus, main:focus-visible { outline: none; box-shadow: none; }
-.view-enter { animation: view-enter var(--dur-3) var(--ease) both; }
-@keyframes view-enter { from { opacity: 0; transform: translateY(var(--enter-y)); } to { opacity: 1; transform: none; } }
+.view-enter { animation: view-enter var(--dur-2) var(--ease) both; }
+@keyframes view-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .page-head { display: flex; align-items: flex-end; gap: var(--s4); flex-wrap: wrap; margin-bottom: var(--s6); }
 .page-head .titles { min-width: 0; flex: 1 1 320px; display: flex; flex-direction: column; gap: var(--s2); }
@@ -158,3 +158,64 @@ a.tile:hover { background: var(--surface-2); }
 /* ---- Polish pass ---- */
 .page-head.sticky h1 { font-size: var(--fs-xl); line-height: var(--lh-xl); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .page-head.sticky .titles { min-width: 0; }
+
+/* ---- Shell: sidebar header, search, collapsible icon rail, mount points ---- */
+.sidebar { overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.side-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); padding-bottom: var(--s5); }
+.side-head .brand { padding: 0 var(--s2); min-width: 0; }
+.side-collapse { color: var(--sidebar-text-2); flex: none; }
+.side-collapse:hover:not(:disabled) { background: var(--sidebar-active); color: var(--sidebar-text); }
+.slot-org:empty, .slot-bell:empty { display: none; }
+.slot-org { margin: 0 0 var(--s3); }
+.slot-org .org { margin: 0; }
+.slot-bell { display: flex; align-items: center; }
+.slot-user { margin-top: auto; position: sticky; bottom: 0; background: var(--sidebar-bg); }
+.slot-user .operator { margin-top: 0; position: static; }
+.side-search {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: var(--control-h); padding: 0 8px 0 10px; margin: 0 0 var(--s5);
+  border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface); color: var(--sidebar-text-2);
+  font-size: var(--fs-sm); text-align: left; box-shadow: var(--shadow-hair); flex: none;
+  transition: border-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+}
+.side-search:hover { border-color: var(--border-strong); color: var(--sidebar-text); }
+.side-search-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-kbd { flex: none; }
+.nav-item { white-space: nowrap; }
+.nav-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+@media (min-width: 961px) {
+  .shell { transition: grid-template-columns var(--dur-2) var(--ease); }
+  :root[data-sidebar="collapsed"] .shell { grid-template-columns: 64px minmax(0, 1fr); }
+  .sidebar.is-collapsed { padding: var(--s4) 10px 0; scrollbar-width: none; }
+  .sidebar.is-collapsed::-webkit-scrollbar { display: none; }
+  .sidebar.is-collapsed .side-head { flex-direction: column; gap: var(--s2); padding-bottom: var(--s4); }
+  .sidebar.is-collapsed .side-head .brand { padding: 0; }
+  .sidebar.is-collapsed .brand-name { display: none; }
+  .sidebar.is-collapsed .slot-org { margin-bottom: var(--s2); }
+  .sidebar.is-collapsed .slot-org .org { padding: 6px; justify-content: center; border-color: transparent; background: transparent; box-shadow: none; }
+  .sidebar.is-collapsed .org-text, .sidebar.is-collapsed .org-chev, .sidebar.is-collapsed [data-rail-hide] { display: none; }
+  .sidebar.is-collapsed .side-search { width: 44px; height: 36px; padding: 0; justify-content: center; margin: 0 auto var(--s4); }
+  .sidebar.is-collapsed .side-search-label, .sidebar.is-collapsed .side-kbd { display: none; }
+  .sidebar.is-collapsed .nav { gap: var(--s2); align-items: center; }
+  .sidebar.is-collapsed .nav-group { align-items: center; }
+  .sidebar.is-collapsed .nav-group + .nav-group::before { content: ""; display: block; width: 24px; height: 1px; margin: 0 auto var(--s2); background: var(--sidebar-border); }
+  .sidebar.is-collapsed .nav-label { display: none; }
+  .sidebar.is-collapsed .nav-item { width: 44px; padding: 0; justify-content: center; }
+  .sidebar.is-collapsed .nav-text { display: none; }
+  .sidebar.is-collapsed .nav-item[aria-current="page"]::after { position: absolute; top: 6px; right: 6px; margin: 0; }
+  .sidebar.is-collapsed .operator { justify-content: center; padding: var(--s3) 0; }
+  .sidebar.is-collapsed .operator .dot { display: none; }
+}
+@media (max-width: 960px) {
+  .side-collapse { display: none; }
+}
+
+/* Motion: off under the Reduced/Off setting and under OS reduced motion (unless Motion = Full). */
+:root[data-motion="reduced"] .view-enter, :root[data-motion="off"] .view-enter { animation: none; }
+:root[data-motion="reduced"] .shell, :root[data-motion="off"] .shell,
+:root[data-motion="reduced"] .sidebar, :root[data-motion="off"] .sidebar,
+:root[data-motion="reduced"] .scrim, :root[data-motion="off"] .scrim { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .view-enter { animation: none; }
+  :root:not([data-motion="full"]) .shell, :root:not([data-motion="full"]) .sidebar, :root:not([data-motion="full"]) .scrim { transition: none; }
+}

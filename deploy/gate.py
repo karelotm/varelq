@@ -118,9 +118,22 @@ def make_handler(code, upstream, limiter, ip_header=None):
             self.do_GET()
 
         def do_GET(self):
-            if urlparse(self.path).path == '/__gate':
+            path = urlparse(self.path).path
+            if path == '/__gate':
                 return self.login_page()
+            if path == '/__logout':
+                return self.logout()
             self.forward()
+
+        def logout(self):
+            """Clears the gate cookie and returns to the access-code page. Works with or without a valid cookie."""
+            secure = '; Secure' if (self.headers.get('X-Forwarded-Proto') or '').lower() == 'https' else ''
+            self.send_response(303)
+            self.send_header('Location', '/__gate')
+            self.send_header('Set-Cookie', f'{COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0{secure}')
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
 
         def do_POST(self):
             if urlparse(self.path).path == '/__gate':

@@ -15,6 +15,21 @@ const ROLE_ORDER = ['invoice', 'purchase_order', 'receiving_record'];
 const ROLE_TAB = { invoice: 'Invoice', purchase_order: 'PO', receiving_record: 'Receipt' };
 const SEV_RANK = { high: 0, medium: 1, low: 2, none: 3 };
 // Within a severity, the three-way result (invoiced vs received) leads.
+const DETAIL_TABS = ['differences', 'documents', 'evidence'];
+let detailTab = 'differences'; // remembered across cases in this session
+let tabsMod; // components/tabs.js (stream A) or null
+
+async function loadTabs() {
+  if (tabsMod !== undefined) return tabsMod;
+  try { tabsMod = await import('../components/tabs.js'); } catch { tabsMod = null; }
+  return tabsMod;
+}
+function detailTabsHtml(items, active) {
+  if (tabsMod && typeof tabsMod.tabs === 'function') {
+    try { return tabsMod.tabs({ id: 'case-tabs', items, active, label: 'Case detail' }); } catch { /* local markup below */ }
+  }
+  return `<div class="tabs" data-tablist="case-tabs" role="tablist" aria-label="Case detail">${items.map((it) => `<button type="button" class="tab" role="tab" id="case-tabs-tab-${it.id}" data-tab="${it.id}" aria-selected="${it.id === active}" aria-controls="case-tabs-panel" tabindex="${it.id === active ? 0 : -1}">${esc(it.label)}${it.count !== undefined ? ` <span class="subtle">${esc(it.count)}</span>` : ''}</button>`).join('')}</div>`;
+}
 const KIND_RANK = { qty_invoiced_vs_received: 0, qty_invoiced_vs_ordered: 1, qty_received_vs_ordered: 2, total_vs_net_plus_tax: 3, price_invoice_vs_order: 4 };
 
 /** Checks with status "difference", highest severity first. */
@@ -127,7 +142,7 @@ function viewerHtml(run, role, location) {
 }
 
 function tabsHtml(run, active) {
-  return `<div class="tabs" role="tablist" aria-label="Source documents">${rolesOf(run).map((r) => `<button type="button" class="tab" role="tab" id="tab-${r}" aria-selected="${r === active}" aria-controls="viewer-panel" data-role="${esc(r)}" tabindex="${r === active ? 0 : -1}">${esc(ROLE_TAB[r] || humanize(r))}</button>`).join('')}</div>`;
+  return `<div class="tabs" id="src-tabs" role="tablist" aria-label="Source documents">${rolesOf(run).map((r) => `<button type="button" class="tab" role="tab" id="tab-${r}" aria-selected="${r === active}" aria-controls="viewer-panel" data-role="${esc(r)}" tabindex="${r === active ? 0 : -1}">${esc(ROLE_TAB[r] || humanize(r))}</button>`).join('')}</div>`;
 }
 
 /* ---------- left column ---------- */
@@ -242,12 +257,25 @@ export async function render(ctx) {
   </div>
 </div>`;
 
+  await loadTabs();
+  if (!DETAIL_TABS.includes(detailTab)) detailTab = 'differences';
+  const fieldCount = fieldRows(run).length;
+  const limCount = Array.isArray(run.limitations) ? run.limitations.length : 0;
+  const items = [
+    { id: 'differences', label: 'Differences', count: num(diffs.length) },
+    { id: 'documents', label: 'Documents', count: num(fieldCount) },
+    { id: 'evidence', label: 'Evidence', count: num(checksCount) },
+  ];
+  const pane = (id, body) => `<div class="case-pane" data-pane="${id}"${id === detailTab ? '' : ' hidden'}>${body}</div>`;
   const left = `
-${panel({ title: 'Differences', count: num(diffs.length), flush: true, id: 'diffs', body: `<div id="diff-table">${differencesTable(run, state.key)}</div>` })}
-${panel({ title: 'Checks', flush: true, body: `
-  <details class="disclosure"><summary>${icon('chevron-right', 16, 'chev')}All checks <span class="subtle">${esc(num(checksCount))}</span></summary>${checksList(run)}</details>
-  ${Array.isArray(run.limitations) && run.limitations.length ? `<details class="disclosure"><summary>${icon('chevron-right', 16, 'chev')}Not checked <span class="subtle">${esc(num(run.limitations.length))}</span></summary>${limitationsList(run)}</details>` : ''}
-  <details class="disclosure"><summary>${icon('chevron-right', 16, 'chev')}Extracted fields <span class="subtle">${esc(num(fieldRows(run).length))}</span></summary>${fieldsTable(run)}</details>` })}`;
+<section class="panel flush case-detail" id="diffs" aria-label="Case detail">
+  ${detailTabsHtml(items, detailTab)}
+  <div role="tabpanel" id="case-tabs-panel" aria-labelledby="case-tabs-tab-${detailTab}">
+  ${pane('differences', `<div id="diff-table">${differencesTable(run, state.key)}</div>`)}
+  ${pane('documents', `<div class="sub-head">Extracted fields</div>${fieldsTable(run)}`)}
+  ${pane('evidence', `<div class="sub-head">All checks</div>${checksList(run)}${limCount ? `<div class="sub-head bordered">Not checked</div>${limitationsList(run)}` : ''}`)}
+  </div>
+</section>`;
 
   const right = `<section class="panel flush" aria-label="Source document">${tabsHtml(run, state.role)}<div id="viewer-panel" role="tabpanel" aria-labelledby="tab-${esc(state.role)}">${viewerHtml(run, state.role, state.location)}</div></section>`;
 
@@ -282,7 +310,7 @@ export function mount(root, ctx) {
   }
 
   function drawViewer() {
-    const tabs = root.querySelector('.tabs');
+    const tabs = root.querySelector('#src-tabs');
     if (tabs) tabs.outerHTML = tabsHtml(run, state.role);
     const vp = root.querySelector('#viewer-panel');
     if (vp) {
@@ -327,7 +355,26 @@ export function mount(root, ctx) {
     }
   }
 
+  function showDetail(id) {
+    if (!DETAIL_TABS.includes(id)) return;
+    detailTab = id;
+    root.querySelectorAll('.case-detail [data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== id; });
+    root.querySelector('#case-tabs-panel')?.setAttribute('aria-labelledby', `case-tabs-tab-${id}`);
+    root.querySelectorAll('.case-detail [role="tablist"] [role="tab"]').forEach((t) => {
+      const on = t.dataset.tab === id;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+    });
+  }
+  let unbindTabs = null;
+  const detailRoot = root.querySelector('.case-detail');
+  if (detailRoot && tabsMod && typeof tabsMod.bindTabs === 'function') {
+    try { const c = tabsMod.bindTabs(detailRoot, (v) => showDetail(v && typeof v === 'object' ? v.id : v)); if (typeof c === 'function') unbindTabs = c; else unbindTabs = () => {}; } catch { unbindTabs = null; }
+  }
+  const tabIdOf = (t) => t.dataset.tab;
+
   const onClick = (e) => {
+    const dt = !unbindTabs && e.target.closest('.case-detail [role="tab"][data-tab]');
+    if (dt) { showDetail(tabIdOf(dt)); return; }
     const act = e.target.closest('[data-action]');
     if (act) {
       if (act.dataset.action === 'decide') { decide(act); return; }
@@ -350,6 +397,15 @@ export function mount(root, ctx) {
     if (tr) selectCheck(tr.dataset.key);
   };
   const onKey = (e) => {
+    const dt = !unbindTabs && e.target.closest && e.target.closest('.case-detail [role="tab"][data-tab]');
+    if (dt && ['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault();
+      const i = DETAIL_TABS.indexOf(tabIdOf(dt));
+      const n = e.key === 'Home' ? 0 : e.key === 'End' ? DETAIL_TABS.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : DETAIL_TABS.length - 1)) % DETAIL_TABS.length;
+      showDetail(DETAIL_TABS[n]);
+      root.querySelector('.case-detail [role="tab"][aria-selected="true"]')?.focus();
+      return;
+    }
     const tr = e.target.closest && e.target.closest('#diff-table tr[data-key]');
     if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); selectCheck(tr.dataset.key); return; }
     if (tr && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
@@ -374,6 +430,7 @@ export function mount(root, ctx) {
   return () => {
     root.removeEventListener('click', onClick);
     root.removeEventListener('keydown', onKey);
+    if (unbindTabs) { try { unbindTabs(); } catch { /* ignore */ } }
     delete ctx.caseState;
   };
 }

@@ -44,6 +44,7 @@ reliability = _optional('reliability')
 agent_lab = _optional('agent_lab')
 samples = _optional('samples')
 gpu = _optional('gpu')
+chat = _optional('chat')
 
 OPTIONAL_MODULES = ('reliability', 'agent_lab', 'samples', 'gpu', 'documents', 'ocr')
 
@@ -510,6 +511,16 @@ class Handler(BaseHTTPRequestHandler):
             return self.post_reliability()
         if parts == ['lab', 'run']:
             return self.post_lab_run()
+        if parts == ['chat']:
+            if chat is None:
+                raise unavailable('chat')
+            payload = self.read_json_dict()
+            try:
+                return 200, chat.answer(payload)
+            except nim.NimError as exc:
+                raise HttpError(503, str(exc)[:300] or 'NVIDIA is unavailable.')
+            except ValueError as exc:
+                raise HttpError(400, str(exc))
         raise HttpError(404, 'Unknown endpoint')
 
     def model_failure(self, kind, exc, extra=None):

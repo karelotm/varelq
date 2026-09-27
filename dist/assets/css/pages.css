@@ -1,0 +1,75 @@
+/* Record pages: Investigations, Suppliers, Receiving, Execution history, Organization. Tokens only. */
+
+/* Filter row above a panel */
+.pages-toolbar { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; margin-bottom: var(--s4); }
+
+/* Vertical rhythm for stacked panels */
+.pages-stack { display: flex; flex-direction: column; }
+.pages-stack > .panel + .panel { margin-top: var(--s5); }
+.pages-narrow { max-width: 760px; }
+
+.pages-cell-name { display: block; max-width: 240px; }
+
+/* Three-tile strip (layout.css .tiles is four columns) */
+.tiles.pages-tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 721px) {
+  .tiles.pages-tiles-3 .tile { border-bottom: 0; border-right: 1px solid var(--border); }
+  .tiles.pages-tiles-3 .tile:last-child { border-right: 0; }
+}
+
+/* Suppliers: disclosure rows */
+.pages-disclosure {
+  display: inline-flex; align-items: center; gap: var(--s2); min-width: 0; max-width: 100%;
+  padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  border-radius: var(--r-control);
+}
+.pages-disclosure .icon { color: var(--text-3); flex: none; transition: color var(--dur-1) var(--ease); }
+.pages-disclosure:hover .icon { color: var(--text); }
+.pages-disclosure:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+.table tbody tr.pages-expandable:hover { background: var(--surface-2); }
+.table tbody tr.pages-expandable.is-open td { border-bottom-color: transparent; }
+.table tbody tr.pages-detail td { height: auto; padding-top: 0; padding-bottom: var(--s3); background: transparent; }
+.pages-sublist { list-style: none; margin: 0; padding: 0 0 0 calc(var(--s5) + 4px); display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.pages-sublist li + li { border-top: 1px solid var(--border); }
+.pages-subrow {
+  display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto auto 16px; align-items: center; gap: var(--s4);
+  min-height: 44px; padding: var(--s2) 0; color: var(--text); text-decoration: none; font-size: var(--fs-sm);
+  border-radius: var(--r-control);
+}
+.pages-subrow .icon { color: var(--text-3); }
+.pages-subrow:hover { background: var(--surface-2); }
+.pages-subrow:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+/* Receiving: gap highlight (soft, no coloured bars) */
+.table tbody tr.pages-row-gap { background: var(--warning-bg); }
+.pages-gap { color: var(--warning); font-weight: 600; }
+.pages-badges { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); }
+.pages-head-meta { display: inline-flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+
+/* Execution history */
+.pages-kind { display: inline-flex; align-items: center; gap: var(--s2); white-space: nowrap; }
+.pages-kind .icon { color: var(--text-3); flex: none; }
+.pages-status { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s1); min-width: 0; max-width: 320px; }
+.pages-error { color: var(--danger); font-size: var(--fs-xs); line-height: var(--lh-xs); overflow-wrap: anywhere; }
+
+/* Organization */
+.pages-input { width: 100%; max-width: 360px; }
+.pages-input[aria-invalid="true"] { border-color: var(--danger); }
+.pages-form-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; padding: var(--s3) var(--s5); border-top: 1px solid var(--border); }
+.pages-org-mark { margin-left: auto; }
+.pages-member { display: flex; align-items: center; gap: var(--s3); padding-bottom: var(--s4); border-bottom: 1px solid var(--border); }
+.pages-member-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.pages-member-text small { color: var(--text-3); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+.pages-note { margin: var(--s4) 0 0; color: var(--text-2); max-width: 68ch; }
+
+@media (max-width: 720px) {
+  .tiles.pages-tiles-3 { grid-template-columns: minmax(0, 1fr); }
+  .tiles.pages-tiles-3 .tile { border-right: 0; border-bottom: 1px solid var(--border); }
+  .tiles.pages-tiles-3 .tile:last-child { border-bottom: 0; }
+  .pages-sublist { padding-left: 0; }
+  .pages-subrow { grid-template-columns: minmax(0, 1fr) auto; gap: var(--s1) var(--s3); }
+  .pages-subrow .icon { display: none; }
+  .pages-form-foot { padding: var(--s3) var(--s4); }
+  .pages-cell-name { max-width: 160px; }
+}
+.pages-error.is-soft { color: var(--text-2); }

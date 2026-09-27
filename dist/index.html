@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="assets/css/layout.css">
 <link rel="stylesheet" href="assets/css/components.css">
 <link rel="stylesheet" href="assets/css/reliability.css">
+<link rel="stylesheet" href="assets/css/pages.css">
+<link rel="stylesheet" href="assets/css/chat.css">
+<link rel="stylesheet" href="assets/css/metrics.css">
+<link rel="stylesheet" href="assets/css/shell-extras.css">
 <script>
   // Apply saved preferences before first paint to avoid a theme flash.
   try {
@@ -22,6 +26,7 @@
     if (p.theme === 'light' || p.theme === 'dark') r.setAttribute('data-theme', p.theme);
     if (p.density === 'compact') r.setAttribute('data-density', 'compact');
     if (['full', 'reduced', 'off'].indexOf(p.motion) >= 0) r.setAttribute('data-motion', p.motion);
+    if (p.sidebar === 'collapsed') r.setAttribute('data-sidebar', 'collapsed');
   } catch (e) { /* storage unavailable */ }
 </script>
 </head>

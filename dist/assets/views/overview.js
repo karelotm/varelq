@@ -1,5 +1,5 @@
 // Overview: headline tiles, top failure patterns, and the cases table (reconciliation runs).
-import { esc, num, money, plural, relTime, humanize, ratio } from '../format.js';
+import { esc, num, money, plural, relTime, humanize, ratio, ms } from '../format.js';
 import { icon } from '../icons.js';
 import { table } from '../components/table.js';
 import { panel } from '../components/panel.js';
@@ -57,11 +57,55 @@ function tile({ label, value, sub = '', tags = '', href }) {
   return href ? `<a class="tile" href="${esc(href)}">${inner}</a>` : `<div class="tile">${inner}</div>`;
 }
 
+function sysItem(k, v, href, extra = '') {
+  const inner = `<span class="sys-item-k">${esc(k)}</span><span class="sys-item-v">${v}</span>${extra}`;
+  return href ? `<a class="sys-item" href="${esc(href)}">${inner}</a>` : `<div class="sys-item">${inner}</div>`;
+}
+
+function meterBar(ratioValue, label) {
+  const r = Math.max(0, Math.min(1, Number(ratioValue) || 0));
+  return `<div class="meter${r >= 0.9 ? ' meter-warn' : ''}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(r * 100)}" aria-label="${esc(label)}"><div class="meter-fill" style="width:${(r * 100).toFixed(1)}%"></div></div>`;
+}
+
+/** Slim "System" strip: NVIDIA requests in the last 60 s vs limit, OCR p50 and endpoint, live GPU memory. Empty when nothing is known. */
+export function systemStrip(usage, status) {
+  const items = [];
+  const n = usage && usage.nvidia && !usage.nvidia.error ? usage.nvidia : null;
+  if (n) {
+    const limit = Number(n.rpm_limit) || 0;
+    const used = Number(n.last_60s) || 0;
+    items.push(sysItem('NVIDIA requests, last 60 s', `${esc(num(used))}${limit ? `<span class="subtle">of ${esc(num(limit))} per minute</span>` : ''}`,
+      '#settings/usage', limit ? meterBar(used / limit, 'NVIDIA requests against the per-minute limit') : ''));
+  }
+  const live = (status && status.live) || (usage && usage.gpu) || null;
+  const ocrCfg = status && status.ocr ? status.ocr : null;
+  const liveP50 = live && live.available && live.ocr && live.ocr.latency_ms ? live.ocr.latency_ms.p50 : null;
+  const recentP50 = usage && usage.ocr && usage.ocr.latency_ms ? usage.ocr.latency_ms.p50 : null;
+  const p50 = liveP50 ?? recentP50;
+  if (ocrCfg || p50 !== null && p50 !== undefined) {
+    const selfHosted = ocrCfg && ocrCfg.mode === 'self-hosted';
+    const label = String((ocrCfg && ocrCfg.label) || '');
+    const where = selfHosted ? (/L4/.test(label) || (live && live.gpu && /L4/.test(live.gpu.name || '')) ? 'L4' : 'self-hosted') : 'hosted';
+    const v = p50 !== null && p50 !== undefined ? `${esc(ms(p50))} <span class="subtle">p50 · ${esc(where)}</span>` : `<span class="subtle">No calls yet · ${esc(where)}</span>`;
+    items.push(sysItem('OCR latency', v, '#settings/gpu'));
+  }
+  if (live && live.available && live.gpu && live.gpu.memory_total_bytes) {
+    const g = live.gpu;
+    const gib = (b) => `${(b / 1024 ** 3).toFixed(1)}`;
+    items.push(sysItem(`GPU memory${g.name ? ` · ${g.name}` : ''}`, `${esc(gib(g.memory_used_bytes || 0))} <span class="subtle">of ${esc(gib(g.memory_total_bytes))} GiB</span>`,
+      '#settings/gpu', meterBar((g.memory_used_bytes || 0) / g.memory_total_bytes, 'GPU memory used')));
+  }
+  if (!items.length) return '';
+  return `<section class="sys-strip" aria-label="System"><div class="sys-strip-label">System</div>${items.join('')}</section>`;
+}
+
 export async function render(ctx) {
-  const [rel, runs, lab] = await Promise.all([
+  const [rel, runs, lab, usage, gpuStatus] = await Promise.all([
     settle(ctx.api.get('/api/reliability/latest?dataset=agentrx-tau-retail')),
     settle(ctx.api.get('/api/runs')),
     settle(ctx.api.get('/api/lab/batches?limit=20')),
+    settle(ctx.api.get('/api/usage')),
+    settle(ctx.gpu ? ctx.gpu() : ctx.api.get('/api/gpu/status')),
   ]);
 
   const report = rel.ok && rel.value && rel.value.schema === 2 ? rel.value : null;
@@ -144,7 +188,8 @@ export async function render(ctx) {
 <div class="grid-2">
   ${panel({ title: 'Top failure patterns', flush: true, body: patternsBody, footer: patternsFoot, actions: '<a class="btn btn-ghost btn-sm" href="#reliability">Findings' + icon('chevron-right', 16) + '</a>' })}
   ${panel({ title: 'Cases', count: runs.ok ? num(cases.length) : null, flush: true, body: casesBody, actions: '<a class="btn btn-ghost btn-sm" href="#documents">New case' + icon('chevron-right', 16) + '</a>' })}
-</div>`;
+</div>
+${systemStrip(usage.ok ? usage.value : null, gpuStatus.ok ? gpuStatus.value : null)}`;
 }
 
 export function mount(root, ctx) {

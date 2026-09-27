@@ -1,8 +1,8 @@
 // Preferences (persisted under varelq.preferences) and in-session state.
 
 const KEY = 'varelq.preferences';
-export const DEFAULT_PREFS = Object.freeze({ theme: 'system', density: 'comfortable', motion: 'system' });
-const ALLOWED = { theme: ['system', 'light', 'dark'], density: ['comfortable', 'compact'], motion: ['system', 'full', 'reduced', 'off'] };
+export const DEFAULT_PREFS = Object.freeze({ theme: 'system', density: 'comfortable', motion: 'system', sidebar: 'expanded' });
+const ALLOWED = { theme: ['system', 'light', 'dark'], density: ['comfortable', 'compact'], motion: ['system', 'full', 'reduced', 'off'], sidebar: ['expanded', 'collapsed'] };
 
 function readStored() {
   try {
@@ -14,6 +14,10 @@ function readStored() {
 
 function sanitize(input) {
   const out = { ...DEFAULT_PREFS };
+  // Keep unknown keys other modules store in the same object (for example a language choice).
+  if (input && typeof input === 'object') {
+    for (const k of Object.keys(input)) if (!(k in ALLOWED) && typeof input[k] !== 'object') out[k] = input[k];
+  }
   for (const k of Object.keys(ALLOWED)) {
     if (input && ALLOWED[k].includes(input[k])) out[k] = input[k];
   }
@@ -29,6 +33,7 @@ export function applyPrefs(p = prefs) {
   if (p.theme === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', p.theme);
   root.setAttribute('data-density', p.density);
   root.setAttribute('data-motion', p.motion);
+  if (p.sidebar === 'collapsed') root.setAttribute('data-sidebar', 'collapsed'); else root.removeAttribute('data-sidebar');
 }
 
 export function setPref(name, value) {

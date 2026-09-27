@@ -1,0 +1,45 @@
+/* Metrics (stream C): settings sections, meters, the overview System strip, case detail tabs. Tokens only; no hex. */
+
+/* Settings rows and footers */
+.settings-rows .setting:last-child { border-bottom: 1px solid var(--border); }
+.settings-rows .input { width: min(100%, 320px); }
+.settings-rows .select { min-width: 120px; }
+.settings-rows .input-narrow { width: 96px; }
+.settings-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); padding: var(--s3) var(--s5); }
+.settings-actions .hint { margin-right: auto; font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--text-3); }
+.settings-foot { padding: var(--s3) var(--s5); border-top: 1px solid var(--border); font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--text-3); }
+.settings-note { color: var(--text-2); }
+.settings-note .hint { margin-top: var(--s1); font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--text-3); }
+.seg-icon > span { padding: 0 var(--s2); }
+.settings-pane { min-height: 240px; }
+.settings-pane > div > .sub-head:first-child { padding-top: var(--s4); }
+
+/* Thin horizontal meter */
+.meter { position: relative; width: 100%; max-width: 240px; height: 4px; border-radius: var(--r-pill); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); overflow: hidden; }
+.meter-fill { height: 100%; border-radius: inherit; background: var(--accent); transition: width var(--dur-3) var(--ease); }
+.meter-warn .meter-fill { background: var(--warning); }
+.meter-row { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+/* Overview: slim System strip */
+.sys-strip { display: flex; flex-wrap: wrap; align-items: stretch; margin: var(--s6) 0 0; border: 1px solid var(--border); border-radius: var(--r-panel); background: var(--surface); overflow: hidden; }
+.sys-strip-label { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s4); font-size: var(--fs-2xs); line-height: 14px; letter-spacing: .1em; text-transform: uppercase; font-weight: 500; color: var(--text-3); border-right: 1px solid var(--border); }
+.sys-item { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: var(--s2) var(--s4); min-width: 0; flex: 1 1 160px; border-right: 1px solid var(--border); color: inherit; text-decoration: none; transition: background-color var(--dur-1) var(--ease); }
+.sys-item:last-child { border-right: 0; }
+a.sys-item:hover { background: var(--surface-2); }
+a.sys-item:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); outline: none; }
+.sys-item-k { font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--text-2); }
+.sys-item-v { font-size: var(--fs-sm); line-height: var(--lh-sm); font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.sys-item-v .subtle { font-size: var(--fs-xs); }
+.sys-item .meter { max-width: none; }
+
+/* Case: detail tabs */
+.case-detail > .tabs, .settings-page > .tabs { padding: 0 var(--s4); overflow-y: hidden; }
+.case-detail [role="tabpanel"][hidden] { display: none; }
+.case-detail .sub-head.bordered:first-child { border-top: 0; }
+
+@media (max-width: 720px) {
+  .sys-strip { flex-direction: column; }
+  .sys-strip-label, .sys-item { border-right: 0; border-bottom: 1px solid var(--border); }
+  .sys-item:last-child { border-bottom: 0; }
+  .settings-actions, .settings-foot { padding-left: var(--s4); padding-right: var(--s4); }
+}
