@@ -1,3 +1,5 @@
+> **ARCHIVED build plan** written during the event. Its numbers are pre-measurement targets, not results. For measured results see [SUBMISSION.md](SUBMISSION.md) and [ACCURACY.md](ACCURACY.md).
+
 # VARELQ: build plan for 27 Sep 2026 (GOMYCODE × NVIDIA "Come Build with AI"), revision 2
 
 **Clocks.** The machine clock is **UTC+0** (Windows zone "Morocco Standard Time"). **Tunis is UTC+1.**
@@ -526,7 +528,7 @@ export function mount(root, ctx) { /* optional; return cleanup fn */ }
     - every model with endpoint and purpose;
     - the datasets: τ-bench © 2024 Sierra, MIT, republished by Microsoft AgentRx, MIT, commit `7a18c79`; SROIE receipt with its licence;
     - Lucide (ISC) and IBM Plex (OFL);
-    - Codex built the baseline **before the event** (commit `a8ed47b`, committed 13:02 Tunis today). List today's commits with `git log --since`.
+    - Codex built the prototype **earlier in the event** (earliest file 11:13 Tunis) (commit `a8ed47b`, committed 13:02 Tunis today). List today's commits with `git log --since`.
     - The Claude Code multi-agent build today is disclosed.
   - **Brev:** one OCR NIM container; the VM booted at about 12:47 Tunis (VM uptime); about $1.08/h, about $8 to 20:00; the teardown is the user's job.
   - **Reliability section:**
@@ -1107,7 +1109,7 @@ D puts these three lines at the top of DEMO.md and SUBMISSION.md.
 | R1 false positives or low precision | Hand-labelled precision and the `reference_writes_blocked` count are published |
 | GPU not ready | 14:30 go/no-go; the hosted fallback is automatic |
 | Judges cannot run the app | Public repo with run instructions (after user approval), plus the video. Snapshot mode is P2 |
-| Originality rule | SUBMISSION.md separates the Codex pre-event baseline from today's commits and discloses the AI build tools |
+| Originality rule | SUBMISSION.md separates the Codex Codex prototype built earlier in the event from today's commits and discloses the AI build tools |
 | Country or eligibility | Blocking question 1. The primary prize is decided after the briefing |
 
 **Security rules (non-negotiable):**
@@ -1176,7 +1178,7 @@ D puts these three lines at the top of DEMO.md and SUBMISSION.md.
 | 10 | Scripted GPU speed | **Accepted.** No numbers in the script, no comparison claim, the chip is on screen for 5 seconds or less, and the wording is "a Brev L4 we deployed" |
 | 11 | Minutes-saved estimate | **Accepted**, cut |
 | 12 | Provenance | **Accepted.** Verified: τ-bench is MIT, © 2024 Sierra. It is cited alongside AgentRx (MIT, commit 7a18c79). Synthetic tags go on the lab tiles |
-| 13 | Originality | **Accepted.** SUBMISSION.md states that Codex built the baseline before the event, gives the baseline commit time, lists today's commits, and discloses the Claude Code multi-agent build |
+| 13 | Originality | **Accepted.** SUBMISSION.md states that Codex built the prototype earlier in the event, gives the baseline commit time, lists today's commits, and discloses the Claude Code multi-agent build |
 | 14 | Structured checks | **Accepted** as P0 in C, with the exact schema in §4 C and §5 |
 | 15 | OCR boxes are lost on reopen | **Accepted.** Added the `sample_id` multipart field, `sources[role].sample.url`, and the case view loads the image from that URL |
 | 16 | `line_boxes` | **Accepted** as P0. It is built one block per line; joined text is no longer split |

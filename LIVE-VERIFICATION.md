@@ -1,5 +1,7 @@
 # Live NVIDIA verification — 27 September 2026
 
+> Timestamped log from 27 Sep. Test counts below are snapshots at the time noted; the current count is in README.md (155 at `870c738`).
+
 Both API paths were called through the local VARELQ HTTP server with authenticated NVIDIA inference using `nvidia/nemotron-3-super-120b-a12b`. No result was substituted with a test fixture. Credentials were entered through the hidden launcher prompt, not written to project files.
 
 ## Document path
@@ -33,7 +35,7 @@ An earlier model response incorrectly grouped order-status problems across tau-4
 - Required numeric field values without unit text; retained explicit printed currency codes such as RM.
 - Preserved failed attempts and the incorrect interpretation in history rather than silently replacing them.
 
-Regression suite: 12 tests passed after the changes. These separate tests use isolated model responses and temporary storage; they are not runtime seed data.
+Regression suite at the time (Codex prototype built earlier in the event, before `c3aeeb2`): 12 tests passed after the changes. These separate tests use isolated model responses and temporary storage; they are not runtime seed data.
 
 The temporary token was shared in chat and should be revoked after this test session. Restarting VARELQ requires a key again. No GPU instance was provisioned.
 
@@ -51,7 +53,7 @@ Dedicated Brev L4 deployment is prepared but not launched. Console quote: $1.07/
 
 ## Build day, 27 Sep 2026 (revision 2 code)
 
-The sections above were written for the pre-event baseline. This section covers today's code.
+The sections above were written for the Codex prototype built earlier in the event. This section covers today's code.
 
 ### Development smoke runs (stream D, not the demo DB)
 
@@ -92,7 +94,7 @@ All four lab batches are live runs of `nvidia/nemotron-3-super-120b-a12b` on NVI
 - The hosted smoke test found that the app called the self-hosted OCR NIM at `/v1/infer`; the NIM serves `/v1/ocr`. Fixed in `fe2bb05`.
 - OCR fallback is covered by unit tests only; the demo DB has no page with `fallback_used: true`.
 
-**Tests.** `python -m unittest discover -s . -p "test_*.py"`: 115 tests, OK.
+**Tests.** `python -m unittest discover -s . -p "test_*.py"`: 115 tests, OK at commit `fe2bb05` (13:53 UTC). At `870c738`: 155 tests, OK.
 
 **Commits today** (after the Codex baseline `a8ed47b`, 12:02 UTC): `c3aeeb2` 13:23 UTC rebuild; `29d8211` 13:47 UTC pacing; `fe2bb05` 13:53 UTC OCR route fix. Repo: https://github.com/karelotm/varelq (public).
 

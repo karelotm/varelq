@@ -38,7 +38,7 @@ GOMYCODE × NVIDIA "Come Build with AI", 27 September 2026. Deadline 17:30 Tunis
 
 **Secondary (checkboxes), one line each** *(form boxes)*:
 - **SupplyzPro** (if not primary): "Step-level detection in conversations and tool calls, groups tied to rule IDs, an inline priority formula, evidence one click away, and a replay proof that reports its own false blocks."
-- **Thunders Engineering Excellence:** "Tested and measured: 152 automated tests; accuracy measured against ground truth (ACCURACY.md); 5/5 live analyses succeeded in an earlier batch today with latency and retries recorded (13 HTTP 429s, one 503); rate-limited lab runs were recorded as errors, not hidden, and calls are now paced; every number tied to a run ID."
+- **Thunders Engineering Excellence:** "Tested and measured: 155 automated tests (commit `870c738`); accuracy measured against ground truth (ACCURACY.md); 5/5 live analyses succeeded in an earlier batch today with latency and retries recorded (13 HTTP 429s, one 503); rate-limited lab runs were recorded as errors, not hidden, and calls are now paced; every number tied to a run ID."
 - **Artefact Data & AI:** "Recorded agent runs become prioritised findings, scored against held-out benchmark reference actions (hits and false positives), with replay rates that report their own false blocks and baseline-vs-guarded lab rates."
 - **Guepard AI Automation:** "A guarded agent workflow: the payment guard blocks unsafe approvals at dispatch and escalates to a human; it never auto-approves."
 - **Yassir:** tick only if the team is in Morocco and the brief fits after reading it. Otherwise skip.
@@ -92,7 +92,7 @@ The seeded report confirms the planning pre-check: R1 fires in 12 runs (22 occur
 
 - IBM Plex Sans and Plex Mono, self-hosted woff2, SIL Open Font Licence (`dist/assets/fonts/OFL.txt`).
 - Lucide icon paths, ISC licence.
-- The VARELQ logo (`dist/assets/logo.svg`) was made in the pre-event baseline.
+- The VARELQ logo (`dist/assets/logo.svg`) was made in the Codex prototype built earlier in the event.
 - Demo video: narration is a generated voice (edge-tts, Microsoft neural voice en-US-AndrewNeural) reading our own script (VOICEOVER.md); the screen recording is an automated Playwright walkthrough of the live app (scripts/video/). No generated images, music or stock media.
 
 ### Stack and access constraints
@@ -130,15 +130,15 @@ fe2bb05 13:53 UTC  Fix self-hosted OCR route: the nemotron-ocr-v2 NIM serves POS
 ```
 
 **Build-time AI contribution** *(form box)*:
-> The pre-event baseline was written by OpenAI Codex. Today's work was written by Claude Code agents (Anthropic) working in parallel streams under our direction: we set the scope, the contract and the design, reviewed and tested the output, and made every product decision. Rules, evaluation and replay are code we can explain line by line; no finding is produced by the build tools.
+> The Codex prototype built earlier in the event was written by OpenAI Codex. Today's work was written by Claude Code agents (Anthropic) working in parallel streams under our direction: we set the scope, the contract and the design, reviewed and tested the output, and made every product decision. Rules, evaluation and replay are code we can explain line by line; no finding is produced by the build tools.
 
 ### Brev usage
 
 *(form box)*:
-> One Brev instance, varelq-ocr (GCP g2-standard-8, NVIDIA L4 24 GB), running the nemotron-ocr-v2 NIM and the public VARELQ demo behind an access-code gate and a Cloudflare quick tunnel. LLM calls go to hosted NVIDIA Build. App OCR through the L4 NIM verified at 14:59 Tunis (458 ms, no fallback). If self-hosted OCR fails, it retries once on the hosted endpoint, marked "fallback". VM booted about 12:48 Tunis; about $1.08/h. No speed claim.
+> One Brev instance, varelq-ocr (GCP g2-standard-8, NVIDIA L4 24 GB), running the nemotron-ocr-v2 NIM and the public VARELQ demo behind an access-code gate and a Cloudflare quick tunnel. LLM calls go to hosted NVIDIA Build. App OCR through the L4 NIM verified at 14:59 Tunis (458 ms, no fallback). If self-hosted OCR fails, it retries once on the hosted endpoint, marked "fallback". VM booted about 12:48 Tunis; about $1.08/h. Latency figures are single measurements (n=1), not a benchmark.
 
-- Status: the NIM and the demo app run on the L4; the app calls the NIM at `/v1/ocr`. The hosted smoke test found the app calling `/v1/infer`; fixed in `fe2bb05`. App-side L4 inference verified at 13:59 UTC (14:59 Tunis): a three-way-short-delivery analysis through the public app (access-code gate) succeeded, run `be1bba179ec54a7f96494e14da4cc5af`, OCR `endpoint_kind: self-hosted`, provider "NIM on Brev L4", 458 ms, `fallback_used: false`, 3 differences found (price vs order, received vs ordered, invoiced vs received), 16.8 s wall time. No `deploy/gpu-capture.json` in the repo yet.
-- Measured OCR latency in the demo DB, hosted endpoint: 980 ms on the three-way invoice (run `f3d8d8bb317c496f9c52550c45d6eb10`), 536 ms on SROIE receipt 000 (run `1230f004874c419d8f963ce5057d4a87`). L4 NIM: 458 ms on the three-way invoice (run `be1bba179ec54a7f96494e14da4cc5af`). These are single measurements, not a comparison; no speed claim.
+- Status: the NIM and the demo app run on the L4; the app calls the NIM at `/v1/ocr`. The hosted smoke test found the app calling `/v1/infer`; fixed in `fe2bb05`. App-side L4 inference verified at 13:59 UTC (14:59 Tunis): a three-way-short-delivery analysis through the public app (access-code gate) succeeded, run `be1bba179ec54a7f96494e14da4cc5af`, OCR `endpoint_kind: self-hosted`, provider "NIM on Brev L4", 458 ms, `fallback_used: false`, 3 differences found (price vs order, received vs ordered, invoiced vs received), 16.8 s wall time. The optional `deploy/gpu-capture.json` capture is not committed.
+- Measured OCR latency in the demo DB, hosted endpoint: 980 ms on the three-way invoice (run `f3d8d8bb317c496f9c52550c45d6eb10`), 536 ms on SROIE receipt 000 (run `1230f004874c419d8f963ce5057d4a87`). L4 NIM: 458 ms on the three-way invoice (run `be1bba179ec54a7f96494e14da4cc5af`). A direct OCR call to the L4 NIM measured 268 ms (ACCURACY.md); the 458 ms above is the OCR step inside an app run. These are single measurements (n=1) of different things, not a benchmark.
 - Teardown is the user's job; see the top of this file.
 
 ### Fallbacks
@@ -181,7 +181,7 @@ Every number below comes from the demo DB, an earlier batch today (labelled), or
 | Three-way sample | `qty_invoiced_vs_received` found on SKU-1 (with `price_invoice_vs_order` and `qty_received_vs_ordered`); 17 line boxes | run `f3d8d8bb317c496f9c52550c45d6eb10` |
 
 **Reliability summary** *(form box)*:
-> 115 automated tests pass. Five live analyses today: 5/5 succeeded, median 21.8 s, 13 HTTP 429s and one 503 absorbed by retries. A 40-run lab burst hit sustained 429s; those runs are recorded as errors, not hidden, and calls are now paced. Replay reports its own false blocks (9 reference-correct writes). R1 hand-labelled precision 5/10. Lab S4: unsafe 5/5 baseline vs 0/5 guarded. Every number has a run ID.
+> 155 automated tests pass (commit `870c738`). Five live analyses today: 5/5 succeeded, median 21.8 s, 13 HTTP 429s and one 503 absorbed by retries. A 40-run lab burst hit sustained 429s; those runs are recorded as errors, not hidden, and calls are now paced. Replay reports its own false blocks (9 reference-correct writes). R1 hand-labelled precision 5/10. Lab S4: unsafe 5/5 baseline vs 0/5 guarded. Every number has a run ID.
 
 **Known limitations:**
 - Rules R1–R3 encode the τ-retail policy; another domain needs its own rule pack.

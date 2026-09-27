@@ -99,7 +99,7 @@ Run VARELQ on SupplyzPro's own agent logs. Write a rule pack for their procureme
 - **Eligibility:** [country] team; SupplyzPro's other eligibility details are TBC.
 
 **Thunders, Engineering Excellence:**
-- **Fit and evidence:** a reliable, tested prototype. It has 152 automated tests and an accuracy report measured against ground truth on 41 documents with 95% intervals (ACCURACY.md). It also has model and OCR fallbacks, rate-limit pacing, and errors recorded instead of hidden.
+- **Fit and evidence:** a reliable, tested prototype. It has 155 automated tests (commit `870c738`) and an accuracy report measured against ground truth on 41 documents with 95% intervals (ACCURACY.md). It also has model and OCR fallbacks, rate-limit pacing, and errors recorded instead of hidden.
 - **Eligibility:** [country] team; award open to one team.
 
 **Guepard, AI Automation:**
@@ -144,7 +144,7 @@ NVIDIA Brev: one L4 (GCP g2-standard-8, about $1.07/h from event credit) runs th
 
 **Live demo URL:** https://grade-gods-font-checks.trycloudflare.com
 
-The demo access code goes in the README/presentation or the testing field below, not here. Suggested wording if needed: "Reviewer demo code: varelq-e665f873 (shared gate, not a personal password)".
+The demo access code goes in the README/presentation or the testing field below, not here. Suggested wording if needed: "Reviewer demo code: <ACCESS_CODE> (shared gate, not a personal password)".
 
 ---
 
@@ -156,7 +156,7 @@ The demo access code goes in the README/presentation or the testing field below,
   - Source: ACCURACY.md §5.
 - **Guard lab, S4 (receiving record missing):** unsafe payments 5/5 without the guard vs 0/5 with it, 4 escalated. Batches b-probe-s4-b-fb59 and b-http-s4-guard; video 0:42. Only one scenario with n = 5 each, and false blocks were not measured.
 - **Speed, cost and failures:**
-  - OCR on the L4: about 260 ms; the hosted service took 550–980 ms.
+  - OCR on the L4: 268 ms for a direct OCR call and 458 ms for the OCR step inside an app run (n=1 each, different measurements); hosted calls took 536–980 ms. Single measurements, not a benchmark.
   - A document analysis takes 12–40 s.
   - HTTP 429 rate limits made 40 lab runs fail. They were recorded as errors, not hidden, and calls are now paced with a model fallback.
   - The demo runs on a Brev L4 at about $1.07/h.

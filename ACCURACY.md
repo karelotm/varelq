@@ -24,7 +24,7 @@ In short: clean documents are read almost perfectly and the invoice checks find 
 | OCR | Receipt lines read exactly (case-insensitive) | 31/44 | 1 receipt | 1230 |
 | OCR | Hosted vs L4 text agreement | 36/37 blocks identical (only the banner differs) | 1 invoice | f3d8/4d97 vs 53d4 |
 | OCR | Hosted repeatability | identical text every run; scores within 0.0036 | 2 stored + 1 live receipt, 2 stored invoice | ocr_pages |
-| OCR | Latency | L4 268 ms (n=1); hosted 536–980 ms stored, 550–754 ms live (n=7) | 8 calls | latency_ms |
+| OCR | Latency | L4 268 ms direct OCR call (n=1; the OCR step inside app run `be1bba17…` took 458 ms); hosted 536–980 ms stored, 550–754 ms live (n=7) | 8 calls | latency_ms |
 | Extraction (LLM) | Fields exactly right, synthetic three-way | 176/176 non-null fields (44/44 per run); 40/40 absent fields correctly empty | 4 runs, 2 distinct document sets | f3d8, 4d97, 53d4 + live INV-0143 |
 | Extraction | Numeric values right, synthetic | 88/88 | same | Decimal equality |
 | Extraction | Fields right end to end, real receipt | 7/9 in every run | 4 runs on identical OCR text | 1230, 0e56 + 2 live |

@@ -26,3 +26,5 @@ Data:
   `sample-documents/manifest.json`).
 
 Each run uses about 2 NVIDIA calls per document (1 OCR, 1 LLM), and the shared limit is 40 requests a minute.
+
+`scripts/eval/results.json` is the scored output of `score.py` and the source of the ACCURACY.md §5 figures (for example SROIE totals 18/20 and planted three-way problems 3/7).
