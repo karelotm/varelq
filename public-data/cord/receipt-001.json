@@ -1,0 +1,53 @@
+{
+  "source_row": 1,
+  "expected": {
+    "menu": [
+      {
+        "nm": "J.STB PROMO",
+        "price": "17500"
+      },
+      {
+        "nm": "Y.B.BAT",
+        "price": "46000"
+      },
+      {
+        "nm": "Y.BASO PROM",
+        "price": "27500"
+      }
+    ],
+    "sub_total": {},
+    "total": {
+      "total_price": "91000",
+      "cashprice": "91000"
+    }
+  },
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "J.STB PROMO",
+        "price": "17500"
+      },
+      {
+        "nm": "Y.B.BAT",
+        "price": "46000"
+      },
+      {
+        "nm": "Y.BASO PROM",
+        "price": "27500"
+      }
+    ],
+    "total": {
+      "total_price": "91000",
+      "cashprice": "91000"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 1,
+    "image_size": {
+      "width": 960,
+      "height": 1280
+    }
+  }
+}

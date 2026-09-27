@@ -1,0 +1,9 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9109
+Order reference: PO-9109
+Supplier: Marrakech Agro Equipement (fictional)
+Received at: Carthage Fabrication warehouse, 2026-09-08
+SKU | Description | Quantity received
+DR-16 | Drip line 16mm 100m | 15
+EM-2 | Emitter 2L/h pack 100 | 20
+Received by: warehouse clerk (fictional)

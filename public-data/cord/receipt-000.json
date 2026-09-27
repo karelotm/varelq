@@ -1,0 +1,50 @@
+{
+  "source_row": 0,
+  "expected": {
+    "menu": [
+      {
+        "nm": "-TICKET CP",
+        "cnt": "2",
+        "price": "60.000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "60.000",
+      "discount_price": "-60.000",
+      "tax_price": "5.455"
+    },
+    "total": {
+      "total_price": "60.000",
+      "creditcardprice": "60.000",
+      "menuqty_cnt": "2.00"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "-TICKET CP",
+      "num": "901016",
+      "cnt": "2",
+      "price": "60.000",
+      "itemsubtotal": "60.000"
+    },
+    "sub_total": {
+      "subtotal_price": "60.000",
+      "discount_price": "-60.000",
+      "tax_price": "5.455"
+    },
+    "total": {
+      "total_price": "60.000",
+      "creditcardprice": "60.000",
+      "menuqty_cnt": "2.00"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 0,
+    "image_size": {
+      "width": 432,
+      "height": 648
+    }
+  }
+}

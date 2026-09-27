@@ -1,0 +1,14 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9106
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Fes Textile Industrie (fictional)
+Order date: 2026-07-28
+Currency: MAD
+SKU | Description | Quantity | Unit price | Line total
+WG-L | Work gloves size L | 200 | 14.50 | 2900.00
+CV-M | Coverall cotton size M | 80 | 118.00 | 9440.00
+HV-V | Hi-vis vest | 150 | 22.00 | 3300.00
+Net: 15640.00 MAD
+VAT rate: 20%
+VAT: 3128.00 MAD
+Total: 18768.00 MAD

@@ -1,0 +1,15 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9102
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Rhone Hydraulique SAS (fictional)
+Order date: 2026-07-28
+Currency: EUR
+SKU | Description | Quantity | Unit price | Line total
+HY-101 | Hydraulic hose 1/2in 2m | 25 | 18.40 | 460.00
+HY-205 | Quick coupler steel | 60 | 7.95 | 477.00
+HY-310 | Pressure gauge 250bar | 6 | 42.00 | 252.00
+HY-412 | O-ring kit NBR | 10 | 15.60 | 156.00
+Net: 1345.00 EUR
+VAT rate: 20%
+VAT: 269.00 EUR
+Total: 1614.00 EUR

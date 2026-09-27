@@ -1,0 +1,13 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9110
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Bizerte Marine Services (fictional)
+Order date: 2026-07-28
+Currency: TND
+SKU | Description | Quantity | Unit price | Line total
+RP-12 | Mooring rope 12mm 50m | 8 | 145.000 | 1160.000
+FD-30 | Boat fender 30cm | 24 | 38.500 | 924.000
+Net: 2084.000 TND
+VAT rate: 19%
+VAT: 395.960 TND
+Total: 2479.960 TND

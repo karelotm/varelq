@@ -1,0 +1,1987 @@
+{
+ "generated_utc": "2026-09-27T15:07:50Z",
+ "code_version": "Evaluated code: documents.py sha256 ed2af099f3c1 and server.py 800f66188f7a, unchanged since commit 9cb23f9 'Accuracy quick wins' (14:41 UTC); HEAD 80c2749 at scoring time. Own server on :8391 with hosted nemotron-ocr-v2 and nemotron-3-super-120b-a12b, NIM_CONCURRENCY=2. Run 1 14:45-14:57 UTC (2 timeouts at 240 s retried once, both succeeded); run 2 14:58-15:07 UTC.",
+ "method": "Metrics (every number comes from the stored raw responses and the ground-truth files in the repo):\n- SROIE (public-data/sroie/NNN.json): company vs extracted supplier (token-sort ratio >= 0.9), date (normalised to\n  ISO; only if the response carries a date field), address (token-sort ratio >= 0.9; only if a field exists),\n  total (numeric, |diff| <= 0.01).\n- OCR character error rate vs the SROIE box text (NNN.csv). Each ground-truth line is aligned one-to-one with the\n  most similar OCR block (greedy, highest similarity first); unmatched ground-truth lines count as full deletions.\n  Reported over all characters (case-sensitive and case-insensitive; SROIE box text is mostly upper case) and case-insensitive over letters and digits only.\n- OCR label quality: each OCR block gets the app's band (Verify < 0.80, Check 0.80-0.90, none >= 0.90); the block\n  is \"wrong\" unless its text (whitespace-normalised, case-insensitive) equals, or is a contiguous part of, its\n  best-matching ground-truth line. Blocks whose best match is below 0.5 similarity are excluded as unmatched.\n- CORD (public-data/cord/receipt-NNN.json): total, tax and subtotal vs extracted total, vat and net; menu prices vs\n  extracted item line totals. Amounts normalised from Indonesian formatting (\"60.000\" and \"28,000\" are thousands).\n- Synthetic three-way sets: planted discrepancy detected as a 'difference' check (TP) or not (FN); any other\n  difference is a false positive; clean controls must have zero differences. Findings the app only surfaces as a\n  limitation text are counted separately as \"surfaced\", never as detected.\n- Latency p50/p95 (OCR latency_ms per page, total wall time per request), OCR and LLM fallback usage, request errors.",
+ "sroie": {
+  "n_documents": 20,
+  "n_scored": 20,
+  "fields": {
+   "company": {
+    "k": 14,
+    "n": 20,
+    "value": 0.7,
+    "wilson95": [
+     0.481,
+     0.855
+    ]
+   },
+   "date": {
+    "k": 0,
+    "n": 20,
+    "value": 0.0,
+    "wilson95": [
+     0.0,
+     0.161
+    ]
+   },
+   "address": {
+    "k": 0,
+    "n": 20,
+    "value": 0.0,
+    "wilson95": [
+     0.0,
+     0.161
+    ]
+   },
+   "total": {
+    "k": 18,
+    "n": 20,
+    "value": 0.9,
+    "wilson95": [
+     0.699,
+     0.972
+    ]
+   }
+  },
+  "fields_primary_llm_only": {
+   "company": {
+    "k": 13,
+    "n": 19,
+    "value": 0.684,
+    "wilson95": [
+     0.46,
+     0.846
+    ]
+   },
+   "total": {
+    "k": 17,
+    "n": 19,
+    "value": 0.895,
+    "wilson95": [
+     0.686,
+     0.971
+    ]
+   }
+  },
+  "company_lenient_all_truth_tokens_contained": {
+   "k": 16,
+   "n": 20,
+   "value": 0.8,
+   "wilson95": [
+    0.584,
+    0.919
+   ]
+  },
+  "fields_absent_from_schema": {
+   "date": 20,
+   "address": 20
+  },
+  "ocr_cer": {
+   "all_chars_case_sensitive": 0.3402,
+   "errors_all": 3692,
+   "chars_all": 10854,
+   "all_chars_case_insensitive": 0.1023,
+   "errors_all_ci": 1110,
+   "alnum_case_insensitive": 0.0799,
+   "errors_alnum": 696,
+   "chars_alnum": 8714
+  },
+  "ocr_labels": {
+   "bands": {
+    "verify": {
+     "blocks": 85,
+     "wrong": 56,
+     "wrong_rate": {
+      "k": 56,
+      "n": 85,
+      "value": 0.659,
+      "wilson95": [
+       0.553,
+       0.751
+      ]
+     }
+    },
+    "check": {
+     "blocks": 312,
+     "wrong": 99,
+     "wrong_rate": {
+      "k": 99,
+      "n": 312,
+      "value": 0.317,
+      "wilson95": [
+       0.268,
+       0.371
+      ]
+     }
+    },
+    "none": {
+     "blocks": 546,
+     "wrong": 55,
+     "wrong_rate": {
+      "k": 55,
+      "n": 546,
+      "value": 0.101,
+      "wilson95": [
+       0.078,
+       0.129
+      ]
+     }
+    }
+   },
+   "matched_blocks": 943,
+   "wrong_blocks": 210,
+   "recall_of_wrong_by_any_label": {
+    "k": 155,
+    "n": 210,
+    "value": 0.738,
+    "wilson95": [
+     0.675,
+     0.793
+    ]
+   },
+   "precision_of_labels": {
+    "k": 155,
+    "n": 397,
+    "value": 0.39,
+    "wilson95": [
+     0.344,
+     0.439
+    ]
+   },
+   "unlabelled_wrong_examples": [
+    {
+     "id": "004",
+     "ocr": "OPERATOR TRAINEE CASHIER",
+     "truth": "UPERATOR TRAINEE CASHIER",
+     "conf": 0.9338032007217407
+    },
+    {
+     "id": "019",
+     "ocr": "Total Gross A",
+     "truth": "TOTAL GROSS",
+     "conf": 0.9027593731880188
+    },
+    {
+     "id": "019",
+     "ocr": "Points Awarded: 3",
+     "truth": "POINTS AWARDED",
+     "conf": 0.9031796455383301
+    },
+    {
+     "id": "031",
+     "ocr": "Total Sales Inci GST",
+     "truth": "TOTAL SALES INCL GST",
+     "conf": 0.9112933278083801
+    },
+    {
+     "id": "031",
+     "ocr": "Iten Courit",
+     "truth": "ITEM COUNT 1",
+     "conf": 0.900652289390564
+    },
+    {
+     "id": "031",
+     "ocr": "Awount",
+     "truth": "AMOUNT",
+     "conf": 0.922669529914856
+    },
+    {
+     "id": "037",
+     "ocr": "PERMAS JAYA B1750 MASAI JOHOR",
+     "truth": "PERMAS JAYA 81750 MASAI JOHOR",
+     "conf": 0.9280120730400085
+    },
+    {
+     "id": "037",
+     "ocr": "PAX NO: 4",
+     "truth": "PAX NO:4",
+     "conf": 0.9033089280128479
+    }
+   ]
+  },
+  "per_document": [
+   {
+    "id": "001",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "INDAH GIFT & HOME DECO",
+     "got": "INDAH GIFT & HOME DECO",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "60.30",
+     "got": 60.3,
+     "ok": true
+    },
+    "date": {
+     "truth": "19/10/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "27, JALAN DEDAP 13, TAMAN JOHOR JAYA, 81100 JOHOR BAHRU, JOHOR.",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.4192,
+    "cer_alnum": 0.1548,
+    "cer_all_case_insensitive": 0.2465
+   },
+   {
+    "id": "004",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "MR D.I.Y. (M) SDN BHD",
+     "got": "MR D.I.Y. (M) SDN BHD",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "30.90",
+     "got": 30.9,
+     "ok": true
+    },
+    "date": {
+     "truth": "18-11-18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "LOT 1851-A & 1851-B, JALAN KPB 6, KAWASAN PERINDUSTRIAN BALAKONG, 43300 SERI KEMBANGAN, SELANGOR (TESCO PUTRA NILAI)",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.1085,
+    "cer_alnum": 0.0711,
+    "cer_all_case_insensitive": 0.0746
+   },
+   {
+    "id": "007",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "S.H.H. MOTOR (SUNGAI RENGIT) SDN. BHD.",
+     "got": "tan chay yee",
+     "ratio": 0.222,
+     "ok": false,
+     "ok_lenient": false
+    },
+    "total": {
+     "truth": "20.00",
+     "got": null,
+     "ok": false
+    },
+    "date": {
+     "truth": "23-01-2019",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "NO. 343, JALAN KURAU, SUNGAI RENGIT, 81620 PENGERANG, JOHOR.",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.2126,
+    "cer_alnum": 0.0531,
+    "cer_all_case_insensitive": 0.0604
+   },
+   {
+    "id": "019",
+    "ok": true,
+    "llm_fallback": true,
+    "company": {
+     "truth": "SHELL ISNI PETRO TRADING",
+     "got": "Shell ISNI PETRO TRADING",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "86.00",
+     "got": 86.0,
+     "ok": true
+    },
+    "date": {
+     "truth": "18/03/18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "LOT 2685 JLN GENTING KLANG 53300 KL SITE 1066",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.566,
+    "cer_alnum": 0.1859,
+    "cer_all_case_insensitive": 0.2426
+   },
+   {
+    "id": "031",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "AEON CO. (M) BHD",
+     "got": "DEEN CO. (M) BHD (126926-1)",
+     "ratio": 0.514,
+     "ok": false,
+     "ok_lenient": false
+    },
+    "total": {
+     "truth": "75.00",
+     "got": 75.0,
+     "ok": true
+    },
+    "date": {
+     "truth": "06/03/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "3RD FLR, AEON TAMAN MALURI SD JLN JEJAKA, TAMAN MALURI CHERAS, 55100 KUALA LUMPUR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.2147,
+    "cer_alnum": 0.1068,
+    "cer_all_case_insensitive": 0.1073
+   },
+   {
+    "id": "037",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "WARAKUYA PERMAS CITY SDN BHD",
+     "got": "WARAKUYA PERMAS CITY SDN BHD",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "57.80",
+     "got": 57.8,
+     "ok": true
+    },
+    "date": {
+     "truth": "10/03/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "JALAN PERMAS UTARA 1 PERMAS JAYA 81750 MASAI JOHOR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.2725,
+    "cer_alnum": 0.0751,
+    "cer_all_case_insensitive": 0.0824
+   },
+   {
+    "id": "040",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "THREE STOOGES",
+     "got": "THREE STOOGES BISTRO & CAFE",
+     "ratio": 0.65,
+     "ok": false,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "343.95",
+     "got": 343.95,
+     "ok": true
+    },
+    "date": {
+     "truth": "12/03/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "109, SS21/1A, DAMANSARA UTAMA",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.2425,
+    "cer_alnum": 0.1772,
+    "cer_all_case_insensitive": 0.195
+   },
+   {
+    "id": "043",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "32 PUB & BISTRO OWN BY CNU TRADING",
+     "got": "D0 PUB & BISTRO own by CNU TRADIE",
+     "ratio": 0.866,
+     "ok": false,
+     "ok_lenient": false
+    },
+    "total": {
+     "truth": "190.00",
+     "got": 190.0,
+     "ok": true
+    },
+    "date": {
+     "truth": "10-03-2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "78G, JALAN SS21/62, DAMANSARA UTAMA, 47400 PETALING JAYA.",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.3818,
+    "cer_alnum": 0.1296,
+    "cer_all_case_insensitive": 0.1562
+   },
+   {
+    "id": "046",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "PASAR MINI JIN SENG",
+     "got": "PASAR NINE JIN SENG",
+     "ratio": 0.895,
+     "ok": false,
+     "ok_lenient": false
+    },
+    "total": {
+     "truth": "28.60",
+     "got": 28.6,
+     "ok": true
+    },
+    "date": {
+     "truth": "18/03/18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "379, JALAN PERMAS SATU, BANDAR BARU PERMAS JAYA 81750 PLENTONG, JOHOR.",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.2333,
+    "cer_alnum": 0.1242,
+    "cer_all_case_insensitive": 0.1368
+   },
+   {
+    "id": "055",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "UNIHAKKA INTERNATIONAL SDN BHD",
+     "got": "UNIHAKKA INTERNATIONAL SDN BHD",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "$8.20",
+     "got": 8.2,
+     "ok": true
+    },
+    "date": {
+     "truth": "19 MAR 2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "12, JALAN TAMPOI 7/4,KAWASAN PERINDUSTRIAN TAMPOI,81200 JOHOR BAHRU,JOHOR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.4023,
+    "cer_alnum": 0.0845,
+    "cer_all_case_insensitive": 0.0883
+   },
+   {
+    "id": "061",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "NANDO'S CHICKENLAND MALAYSIA SDN BHD",
+     "got": "Nando's Chickenland Malaysia Sdn Bhd",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "129.30",
+     "got": 129.3,
+     "ok": true
+    },
+    "date": {
+     "truth": "28 MAR 18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "UNIT G-13, GROUND FLOOR, NO.1 JLN KIARA, MONT KIARA 50480 KUALA LUMPUR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.4622,
+    "cer_alnum": 0.0278,
+    "cer_all_case_insensitive": 0.0352
+   },
+   {
+    "id": "064",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "SUN WONG KUT SDN BHD",
+     "got": "SUN WONG KUT SDN BHD",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "88.17",
+     "got": 88.17,
+     "ok": true
+    },
+    "date": {
+     "truth": "21/02/18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "176 JLN SUNGEI BESI 57100 KUALA LUMPUR.",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.5317,
+    "cer_alnum": 0.1818,
+    "cer_all_case_insensitive": 0.2101
+   },
+   {
+    "id": "067",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "LIAN CHI PU TIAN VEGETARIAN RESTAURANT SDN BHD",
+     "got": "LIAN CHI PU TIAN VEGETARIAN RESTAURANT SDN BHD",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "53.55",
+     "got": 53.55,
+     "ok": true
+    },
+    "date": {
+     "truth": "06/01/18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "54,JALAN SS23/11 TAMAN SEA,47400 PETALING JAYA,SELANGOR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.1439,
+    "cer_alnum": 0.0069,
+    "cer_all_case_insensitive": 0.0396
+   },
+   {
+    "id": "073",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "LIAN HING STATIONERY SDN BHD",
+     "got": "LIAN HING STATIONERY SDN BHD",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "79.50",
+     "got": 79.5,
+     "ok": true
+    },
+    "date": {
+     "truth": "27/03/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "NO.32 & 33, JALAN SR 1/9, SEKSYEN 9, TAMAN SERDANG RAYA, 43300 SERI KEMBANGAN, SELANGOR DARUL EHSAN",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.3452,
+    "cer_alnum": 0.0609,
+    "cer_all_case_insensitive": 0.0807
+   },
+   {
+    "id": "088",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "IKANO HANDEL SDN BHD",
+     "got": "IKAND HANDEL SDN BHD",
+     "ratio": 0.95,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "99.80",
+     "got": 99.8,
+     "ok": true
+    },
+    "date": {
+     "truth": "09/08/17",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "NO 2A JALAN COCHRANE TAMAN MALURI 55100 KUALA LUMPUR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.3417,
+    "cer_alnum": 0.0576,
+    "cer_all_case_insensitive": 0.0692
+   },
+   {
+    "id": "109",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "LIM SENG THO HARDWARE TRADING",
+     "got": "LIM SENG THO HARDWARE TRADING",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "7.00",
+     "got": 7.0,
+     "ok": true
+    },
+    "date": {
+     "truth": "09/02/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "NO 7, SIMPANG OFF BATU VILLAGE, JALAN IPOH BATU 5, 51200 KUALA LUMPUR MALAYSIA",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.3333,
+    "cer_alnum": 0.0185,
+    "cer_all_case_insensitive": 0.075
+   },
+   {
+    "id": "145",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "GERBANG ALAF RESTAURANTS SDN BHD",
+     "got": "Gerbang Alaf Restaurants Sdn Bhd",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "8.50",
+     "got": 8.5,
+     "ok": true
+    },
+    "date": {
+     "truth": "10/03/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "LEVEL 6, BANGUNAN TH, DAMANSARA UPTOWN3 NO.3, JALAN SS21/39, 47400 PETALING JAYA SELANGOR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.4262,
+    "cer_alnum": 0.0068,
+    "cer_all_case_insensitive": 0.0112
+   },
+   {
+    "id": "157",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "GOLDEN SCOOP SDN BHD",
+     "got": "Golden Scoop Sdn Bhd (169609-A)",
+     "ratio": 0.816,
+     "ok": false,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "21.50",
+     "got": 21.5,
+     "ok": true
+    },
+    "date": {
+     "truth": "16/02/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "A-16-1, TOWER A, NORTHPOINT OFFICE, MID VALLEY CITY, NO1, MEDAN SYED PUTRA UTARA KUALA LUMPUR MALAYSIA",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.4707,
+    "cer_alnum": 0.0129,
+    "cer_all_case_insensitive": 0.0345
+   },
+   {
+    "id": "169",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "YAM FRESH",
+     "got": "Yam Fresh",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "RM29.30",
+     "got": 30.3,
+     "ok": false
+    },
+    "date": {
+     "truth": "2018-03-18",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "NO. 145G, JALAN RIMBUNAN RAYA 1, LAMAN RIMBUNAN KEPONG, 52100 KUALA LUMPUR",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.5298,
+    "cer_alnum": 0.1289,
+    "cer_all_case_insensitive": 0.1459
+   },
+   {
+    "id": "178",
+    "ok": true,
+    "llm_fallback": false,
+    "company": {
+     "truth": "KEDAI PAPAN YEW CHUAN",
+     "got": "KEDAI PAPAN YEW CHUAN",
+     "ratio": 1.0,
+     "ok": true,
+     "ok_lenient": true
+    },
+    "total": {
+     "truth": "174.90",
+     "got": 174.9,
+     "ok": true
+    },
+    "date": {
+     "truth": "31/03/2018",
+     "got": null,
+     "ok": false,
+     "note": "no date field in response"
+    },
+    "address": {
+     "truth": "LOT 276 JALAN BANTING 43800 DENGKIL, SELANGOR.",
+     "got": null,
+     "ok": false,
+     "note": "no address field in response"
+    },
+    "cer_all": 0.2283,
+    "cer_alnum": 0.0057,
+    "cer_all_case_insensitive": 0.035
+   }
+  ]
+ },
+ "cord": {
+  "n_documents": 10,
+  "n_scored": 10,
+  "fields": {
+   "total": {
+    "k": 6,
+    "n": 9,
+    "value": 0.667,
+    "wilson95": [
+     0.354,
+     0.879
+    ]
+   },
+   "tax": {
+    "k": 2,
+    "n": 4,
+    "value": 0.5,
+    "wilson95": [
+     0.15,
+     0.85
+    ]
+   },
+   "subtotal": {
+    "k": 3,
+    "n": 8,
+    "value": 0.375,
+    "wilson95": [
+     0.137,
+     0.694
+    ]
+   },
+   "menu_prices": {
+    "k": 7,
+    "n": 16,
+    "value": 0.438,
+    "wilson95": [
+     0.231,
+     0.668
+    ]
+   }
+  },
+  "amounts_off_by_factor_1000": 4,
+  "per_document": [
+   {
+    "id": "000",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "60.000",
+     "got": null,
+     "ok": false
+    },
+    "tax": {
+     "truth": "5.455",
+     "got": 5.455,
+     "ok": false
+    },
+    "subtotal": {
+     "truth": "60.000",
+     "got": 60.0,
+     "ok": false
+    },
+    "menu_prices_found": 0,
+    "items_extracted": 1,
+    "currency": "€"
+   },
+   {
+    "id": "001",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "91000",
+     "got": null,
+     "ok": false
+    },
+    "tax": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "subtotal": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "menu_prices_found": 0,
+    "items_extracted": 3,
+    "currency": null
+   },
+   {
+    "id": "002",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "28,000",
+     "got": 28000,
+     "ok": true
+    },
+    "tax": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "subtotal": {
+     "truth": "28,000",
+     "got": null,
+     "ok": false
+    },
+    "menu_prices_found": 0,
+    "items_extracted": 1,
+    "currency": null
+   },
+   {
+    "id": "003",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "11,000",
+     "got": 11000,
+     "ok": true
+    },
+    "tax": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "subtotal": {
+     "truth": "11,000",
+     "got": null,
+     "ok": false
+    },
+    "menu_prices_found": 1,
+    "items_extracted": 1,
+    "currency": null
+   },
+   {
+    "id": "004",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "174,600",
+     "got": 174600,
+     "ok": true
+    },
+    "tax": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "subtotal": {
+     "truth": "194,000",
+     "got": null,
+     "ok": false
+    },
+    "menu_prices_found": 2,
+    "items_extracted": 3,
+    "currency": null
+   },
+   {
+    "id": "005",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "31.000",
+     "got": 31.0,
+     "ok": false
+    },
+    "tax": {
+     "truth": "2.818",
+     "got": null,
+     "ok": false
+    },
+    "subtotal": {
+     "truth": "28.182",
+     "got": 28.182,
+     "ok": false
+    },
+    "menu_prices_found": 0,
+    "items_extracted": 2,
+    "currency": null
+   },
+   {
+    "id": "006",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "46,000",
+     "got": 46000,
+     "ok": true
+    },
+    "tax": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "subtotal": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "menu_prices_found": 2,
+    "items_extracted": 3,
+    "currency": null
+   },
+   {
+    "id": "007",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "111,000",
+     "got": 111000,
+     "ok": true
+    },
+    "tax": {
+     "truth": "10,091",
+     "got": 10091,
+     "ok": true
+    },
+    "subtotal": {
+     "truth": "100,909",
+     "got": 100909,
+     "ok": true
+    },
+    "menu_prices_found": 0,
+    "items_extracted": 1,
+    "currency": null
+   },
+   {
+    "id": "008",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": "50,000",
+     "got": 50000,
+     "ok": true
+    },
+    "tax": {
+     "truth": "4,545",
+     "got": 4545,
+     "ok": true
+    },
+    "subtotal": {
+     "truth": "45,455",
+     "got": 45455,
+     "ok": true
+    },
+    "menu_prices_found": 1,
+    "items_extracted": 3,
+    "currency": null
+   },
+   {
+    "id": "009",
+    "ok": true,
+    "llm_fallback": false,
+    "total": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "tax": {
+     "truth": null,
+     "got": null,
+     "scored": false
+    },
+    "subtotal": {
+     "truth": "36000",
+     "got": 36000,
+     "ok": true
+    },
+    "menu_prices_found": 1,
+    "items_extracted": 1,
+    "currency": null
+   }
+  ]
+ },
+ "synthetic": {
+  "n_sets": 10,
+  "n_scored": 10,
+  "planted_by_type": {
+   "currency_mismatch": {
+    "tp": 0,
+    "fn": 1,
+    "surfaced_only": 1,
+    "errors": 0
+   },
+   "duplicate_line": {
+    "tp": 0,
+    "fn": 1,
+    "surfaced_only": 1,
+    "errors": 0
+   },
+   "missing_receiving_record": {
+    "tp": 0,
+    "fn": 1,
+    "surfaced_only": 1,
+    "errors": 0
+   },
+   "over_invoicing": {
+    "tp": 1,
+    "fn": 0,
+    "surfaced_only": 0,
+    "errors": 0
+   },
+   "price_mismatch": {
+    "tp": 0,
+    "fn": 1,
+    "surfaced_only": 0,
+    "errors": 0
+   },
+   "short_delivery": {
+    "tp": 1,
+    "fn": 0,
+    "surfaced_only": 0,
+    "errors": 0
+   },
+   "vat_miscalculation": {
+    "tp": 1,
+    "fn": 0,
+    "surfaced_only": 0,
+    "errors": 0
+   }
+  },
+  "detected": {
+   "k": 3,
+   "n": 7,
+   "value": 0.429,
+   "wilson95": [
+    0.158,
+    0.75
+   ]
+  },
+  "false_positive_differences": 6,
+  "false_positive_kinds": {
+   "line_qty_x_price": 4,
+   "line_sum_vs_net": 1,
+   "tax_vs_rate": 1
+  },
+  "clean_controls_with_zero_differences": {
+   "k": 2,
+   "n": 3,
+   "value": 0.667,
+   "wilson95": [
+    0.208,
+    0.939
+   ]
+  },
+  "per_set": [
+   {
+    "id": "eval-clean-eur-4lines",
+    "ok": true,
+    "expected": "no differences",
+    "planted": [],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [
+     {
+      "id": "line_qty_x_price:line-1",
+      "observed": "18.40",
+      "expected": "8464.00"
+     },
+     {
+      "id": "line_qty_x_price:line-2",
+      "observed": "7.95",
+      "expected": "3792.15"
+     },
+     {
+      "id": "line_qty_x_price:line-3",
+      "observed": "42.00",
+      "expected": "10584.00"
+     },
+     {
+      "id": "line_qty_x_price:line-4",
+      "observed": "15.60",
+      "expected": "2433.60"
+     },
+     {
+      "id": "line_sum_vs_net",
+      "observed": "83.95",
+      "expected": "1345.00"
+     }
+    ],
+    "differences": [
+     "line_qty_x_price:line-1",
+     "line_qty_x_price:line-2",
+     "line_qty_x_price:line-3",
+     "line_qty_x_price:line-4",
+     "line_sum_vs_net"
+    ],
+    "n_checks": 7,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown.",
+     "Invoice line 1: no unique matching SKU on the order; cross-document checks skipped.",
+     "Invoice line 2: no unique matching SKU on the order; cross-document checks skipped.",
+     "Invoice line 3: no unique matching SKU on the order; cross-document checks skipped.",
+     "Invoice line 4: no unique matching SKU on the order; cross-document checks skipped."
+    ]
+   },
+   {
+    "id": "eval-clean-mad-6lines",
+    "ok": true,
+    "expected": "no differences",
+    "planted": [],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [],
+    "differences": [],
+    "n_checks": 33,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown."
+    ]
+   },
+   {
+    "id": "eval-clean-tnd-1line",
+    "ok": true,
+    "expected": "no differences",
+    "planted": [],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [],
+    "differences": [],
+    "n_checks": 8,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown."
+    ]
+   },
+   {
+    "id": "eval-currency-mismatch",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "currency_mismatch",
+      "detected": false,
+      "surfaced_in_limitations": [
+       "Price comparison skipped: invoice and order currencies must be explicit and identical."
+      ]
+     }
+    ],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [],
+    "differences": [],
+    "n_checks": 8,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "invoice.net: value 2084.0 not found in the cited line; value excluded.",
+     "invoice.vat: value 395.96 not found in the cited line; value excluded.",
+     "invoice.total: value 2479.96 not found in the cited line; value excluded.",
+     "Invoice total versus net plus tax: required values unavailable; check not performed.",
+     "Invoice tax versus printed tax rate: required values unavailable; check not performed.",
+     "Invoice line totals versus net amount: required values unavailable; check not performed.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown.",
+     "Price comparison skipped: invoice and order currencies must be explicit and identical."
+    ]
+   },
+   {
+    "id": "eval-duplicate-line-mad",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "duplicate_line",
+      "detected": false,
+      "surfaced_in_limitations": [
+       "Invoice line 1: no unique matching SKU on the order; cross-document checks skipped.",
+       "Invoice line 3: no unique matching SKU on the order; cross-document checks skipped."
+      ]
+     }
+    ],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [],
+    "differences": [],
+    "n_checks": 10,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown.",
+     "Invoice line 1: no unique matching SKU on the order; cross-document checks skipped.",
+     "Invoice line 3: no unique matching SKU on the order; cross-document checks skipped."
+    ]
+   },
+   {
+    "id": "eval-missing-receipt-eur",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "missing_receiving_record",
+      "detected": false,
+      "surfaced_in_limitations": [
+       "SL-450: no unique receiving line; delivery checks skipped."
+      ]
+     }
+    ],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [],
+    "differences": [],
+    "n_checks": 16,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown.",
+     "SL-450: no unique receiving line; delivery checks skipped."
+    ]
+   },
+   {
+    "id": "eval-over-invoicing-mad",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "over_invoicing",
+      "detected": true,
+      "check": "qty_invoiced_vs_ordered:WG-L"
+     }
+    ],
+    "extra_checks_on_planted_item": [
+     "qty_invoiced_vs_received:WG-L"
+    ],
+    "false_positives": [],
+    "differences": [
+     "qty_invoiced_vs_ordered:WG-L",
+     "qty_invoiced_vs_received:WG-L"
+    ],
+    "n_checks": 18,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown."
+    ]
+   },
+   {
+    "id": "eval-price-mismatch-tnd",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "price_mismatch",
+      "detected": false,
+      "surfaced_in_limitations": []
+     }
+    ],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [
+     {
+      "id": "tax_vs_rate",
+      "observed": "354.635",
+      "expected": "354.64"
+     }
+    ],
+    "differences": [
+     "tax_vs_rate"
+    ],
+    "n_checks": 6,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown.",
+     "Invoice line 1: no unique matching SKU on the order; cross-document checks skipped.",
+     "Invoice line 2: no unique matching SKU on the order; cross-document checks skipped.",
+     "Invoice line 3: no unique matching SKU on the order; cross-document checks skipped."
+    ]
+   },
+   {
+    "id": "eval-short-delivery-eur",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "short_delivery",
+      "detected": true,
+      "check": "qty_received_vs_ordered:FX-M6"
+     }
+    ],
+    "extra_checks_on_planted_item": [
+     "qty_invoiced_vs_received:FX-M6"
+    ],
+    "false_positives": [],
+    "differences": [
+     "qty_received_vs_ordered:FX-M6",
+     "qty_invoiced_vs_received:FX-M6"
+    ],
+    "n_checks": 13,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown."
+    ]
+   },
+   {
+    "id": "eval-vat-miscalc-tnd",
+    "ok": true,
+    "expected": "differences",
+    "planted": [
+     {
+      "kind": "vat_miscalculation",
+      "detected": true,
+      "check": "tax_vs_rate"
+     }
+    ],
+    "extra_checks_on_planted_item": [],
+    "false_positives": [],
+    "differences": [
+     "tax_vs_rate"
+    ],
+    "n_checks": 23,
+    "limitations": [
+     "Some fields were read with OCR. Verify characters and amounts against the original scan; bounding boxes and OCR scores are available in source details.",
+     "Discounts, shipping and multiple tax rates require manual review; checks cover the values shown."
+    ]
+   }
+  ]
+ },
+ "operations": {
+  "requests": 40,
+  "http_status_counts": {
+   "200": 40
+  },
+  "errors": [],
+  "llm_models": {
+   "nvidia/nemotron-3-super-120b-a12b": 38,
+   "nvidia/nemotron-3.5-lightning-30b-a3b": 2
+  },
+  "llm_fallback_used": 2,
+  "llm_fallbacks": [
+   {
+    "dataset": "sroie",
+    "id": "019",
+    "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+   },
+   {
+    "dataset": "synthetic",
+    "id": "eval-clean-tnd-1line",
+    "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+   }
+  ],
+  "ocr_pages": 40,
+  "ocr_endpoint_kinds": {
+   "hosted": 40
+  },
+  "ocr_fallback_used": 0,
+  "latency_ms": {
+   "ocr_p50": 558.0,
+   "ocr_p95": 842.1,
+   "ocr_n": 40,
+   "total_p50": 12695.0,
+   "total_p95": 40739.9,
+   "total_n": 40,
+   "total_mean": 19882.4
+  }
+ },
+ "repeat_run": {
+  "sroie_fields": {
+   "company": {
+    "k": 12,
+    "n": 20,
+    "value": 0.6,
+    "wilson95": [
+     0.387,
+     0.781
+    ]
+   },
+   "date": {
+    "k": 0,
+    "n": 20,
+    "value": 0.0,
+    "wilson95": [
+     0.0,
+     0.161
+    ]
+   },
+   "address": {
+    "k": 0,
+    "n": 20,
+    "value": 0.0,
+    "wilson95": [
+     0.0,
+     0.161
+    ]
+   },
+   "total": {
+    "k": 16,
+    "n": 20,
+    "value": 0.8,
+    "wilson95": [
+     0.584,
+     0.919
+    ]
+   }
+  },
+  "cord_fields": {
+   "total": {
+    "k": 4,
+    "n": 9,
+    "value": 0.444,
+    "wilson95": [
+     0.189,
+     0.733
+    ]
+   },
+   "tax": {
+    "k": 2,
+    "n": 4,
+    "value": 0.5,
+    "wilson95": [
+     0.15,
+     0.85
+    ]
+   },
+   "subtotal": {
+    "k": 3,
+    "n": 8,
+    "value": 0.375,
+    "wilson95": [
+     0.137,
+     0.694
+    ]
+   },
+   "menu_prices": {
+    "k": 3,
+    "n": 16,
+    "value": 0.188,
+    "wilson95": [
+     0.066,
+     0.43
+    ]
+   }
+  },
+  "synthetic": {
+   "n_sets": 10,
+   "n_scored": 10,
+   "planted_by_type": {
+    "currency_mismatch": {
+     "tp": 0,
+     "fn": 1,
+     "surfaced_only": 1,
+     "errors": 0
+    },
+    "duplicate_line": {
+     "tp": 0,
+     "fn": 1,
+     "surfaced_only": 1,
+     "errors": 0
+    },
+    "missing_receiving_record": {
+     "tp": 0,
+     "fn": 1,
+     "surfaced_only": 1,
+     "errors": 0
+    },
+    "over_invoicing": {
+     "tp": 1,
+     "fn": 0,
+     "surfaced_only": 0,
+     "errors": 0
+    },
+    "price_mismatch": {
+     "tp": 0,
+     "fn": 1,
+     "surfaced_only": 0,
+     "errors": 0
+    },
+    "short_delivery": {
+     "tp": 1,
+     "fn": 0,
+     "surfaced_only": 0,
+     "errors": 0
+    },
+    "vat_miscalculation": {
+     "tp": 1,
+     "fn": 0,
+     "surfaced_only": 0,
+     "errors": 0
+    }
+   },
+   "detected": {
+    "k": 3,
+    "n": 7,
+    "value": 0.429,
+    "wilson95": [
+     0.158,
+     0.75
+    ]
+   },
+   "false_positive_differences": 1,
+   "false_positive_kinds": {
+    "tax_vs_rate": 1
+   },
+   "clean_controls_with_zero_differences": {
+    "k": 3,
+    "n": 3,
+    "value": 1.0,
+    "wilson95": [
+     0.438,
+     1.0
+    ]
+   }
+  },
+  "operations": {
+   "requests": 40,
+   "http_status_counts": {
+    "200": 40
+   },
+   "errors": [],
+   "llm_models": {
+    "nvidia/nemotron-3-super-120b-a12b": 32,
+    "nvidia/nemotron-3.5-lightning-30b-a3b": 8
+   },
+   "llm_fallback_used": 8,
+   "llm_fallbacks": [
+    {
+     "dataset": "cord",
+     "id": "001",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "cord",
+     "id": "004",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "cord",
+     "id": "005",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "cord",
+     "id": "006",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "cord",
+     "id": "007",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "sroie",
+     "id": "061",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "sroie",
+     "id": "178",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    },
+    {
+     "dataset": "synthetic",
+     "id": "eval-duplicate-line-mad",
+     "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+     "reason": "nvidia/nemotron-3-super-120b-a12b exhausted retries (HTTP 429)"
+    }
+   ],
+   "ocr_pages": 40,
+   "ocr_endpoint_kinds": {
+    "hosted": 40
+   },
+   "ocr_fallback_used": 0,
+   "latency_ms": {
+    "ocr_p50": 540.0,
+    "ocr_p95": 695.8,
+    "ocr_n": 40,
+    "total_p50": 25445.0,
+    "total_p95": 72773.1,
+    "total_n": 40,
+    "total_mean": 27036.6
+   }
+  },
+  "agreement_with_first_run": {
+   "documents_in_both_runs": 40,
+   "ocr_text_identical": {
+    "k": 40,
+    "n": 40,
+    "value": 1.0,
+    "wilson95": [
+     0.912,
+     1.0
+    ]
+   },
+   "key_fields_identical": {
+    "k": 28,
+    "n": 40,
+    "value": 0.7,
+    "wilson95": [
+     0.546,
+     0.819
+    ]
+   },
+   "difference_sets_identical": {
+    "k": 32,
+    "n": 40,
+    "value": 0.8,
+    "wilson95": [
+     0.652,
+     0.895
+    ]
+   },
+   "changed": [
+    {
+     "dataset": "cord",
+     "id": "000",
+     "changed": {
+      "net": [
+       60.0,
+       null
+      ],
+      "vat": [
+       5.455,
+       null
+      ]
+     }
+    },
+    {
+     "dataset": "cord",
+     "id": "001",
+     "changed": {
+      "n_items": [
+       3,
+       0
+      ]
+     }
+    },
+    {
+     "dataset": "cord",
+     "id": "002",
+     "changed": {
+      "net": [
+       null,
+       28000
+      ],
+      "n_items": [
+       1,
+       2
+      ]
+     }
+    },
+    {
+     "dataset": "cord",
+     "id": "004",
+     "changed": {
+      "total": [
+       174600,
+       null
+      ],
+      "n_items": [
+       3,
+       2
+      ]
+     }
+    },
+    {
+     "dataset": "cord",
+     "id": "005",
+     "changed": {
+      "supplier": [
+       "TRAD KY TOAST CARTE",
+       null
+      ],
+      "n_items": [
+       2,
+       1
+      ],
+      "differences": [
+       [
+        "line_sum_vs_net"
+       ],
+       [
+        "line_qty_x_price:line-1",
+        "line_sum_vs_net"
+       ]
+      ]
+     }
+    },
+    {
+     "dataset": "cord",
+     "id": "006",
+     "changed": {
+      "total": [
+       46000,
+       null
+      ]
+     }
+    },
+    {
+     "dataset": "cord",
+     "id": "007",
+     "changed": {
+      "net": [
+       100909,
+       null
+      ]
+     }
+    },
+    {
+     "dataset": "sroie",
+     "id": "031",
+     "changed": {
+      "net": [
+       75.0,
+       70.75
+      ],
+      "differences": [
+       [
+        "tax_vs_rate",
+        "total_vs_net_plus_tax"
+       ],
+       [
+        "line_sum_vs_net"
+       ]
+      ]
+     }
+    },
+    {
+     "dataset": "sroie",
+     "id": "037",
+     "changed": {
+      "net": [
+       79.6,
+       null
+      ],
+      "differences": [
+       [
+        "tax_vs_rate",
+        "total_vs_net_plus_tax"
+       ],
+       []
+      ]
+     }
+    },
+    {
+     "dataset": "sroie",
+     "id": "061",
+     "changed": {
+      "supplier": [
+       "Nando's Chickenland Malaysia Sdn Bhd",
+       null
+      ],
+      "total": [
+       129.3,
+       null
+      ],
+      "net": [
+       129.3,
+       null
+      ],
+      "vat": [
+       7.3,
+       null
+      ],
+      "n_items": [
+       7,
+       9
+      ],
+      "differences": [
+       [
+        "line_qty_x_price:line-1",
+        "line_qty_x_price:line-5",
+        "tax_vs_rate",
+        "total_vs_net_plus_tax"
+       ],
+       []
+      ]
+     }
+    },
+    {
+     "dataset": "sroie",
+     "id": "073",
+     "changed": {
+      "differences": [
+       [
+        "line_qty_x_price:line-4"
+       ],
+       []
+      ]
+     }
+    },
+    {
+     "dataset": "sroie",
+     "id": "088",
+     "changed": {
+      "net": [
+       94.16,
+       null
+      ],
+      "differences": [
+       [
+        "tax_vs_rate"
+       ],
+       []
+      ]
+     }
+    },
+    {
+     "dataset": "sroie",
+     "id": "178",
+     "changed": {
+      "supplier": [
+       "KEDAI PAPAN YEW CHUAN",
+       null
+      ],
+      "total": [
+       174.9,
+       null
+      ],
+      "net": [
+       165.0,
+       null
+      ],
+      "vat": [
+       9.9,
+       null
+      ],
+      "differences": [
+       [
+        "line_qty_x_price:line-1",
+        "line_sum_vs_net"
+       ],
+       []
+      ]
+     }
+    },
+    {
+     "dataset": "synthetic",
+     "id": "eval-clean-eur-4lines",
+     "changed": {
+      "differences": [
+       [
+        "line_qty_x_price:line-1",
+        "line_qty_x_price:line-2",
+        "line_qty_x_price:line-3",
+        "line_qty_x_price:line-4",
+        "line_sum_vs_net"
+       ],
+       []
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

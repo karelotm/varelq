@@ -1,0 +1,41 @@
+{
+  "source_row": 9,
+  "expected": {
+    "menu": [
+      {
+        "nm": "Bumbu Kaldu Ayam 1",
+        "price": "36000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "36000"
+    },
+    "total": {
+      "cashprice": "50000",
+      "changeprice": "14000"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "Bumbu Kaldu Ayam 1",
+      "unitprice": "36000",
+      "price": "36000"
+    },
+    "sub_total": {
+      "subtotal_price": "36000"
+    },
+    "total": {
+      "cashprice": "50000",
+      "changeprice": "14000"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 9,
+    "image_size": {
+      "width": 576,
+      "height": 864
+    }
+  }
+}

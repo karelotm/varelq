@@ -125,3 +125,86 @@ In short: the fastest win is to stop showing the raw score as a percentage and s
 9. **Improve R1 itself** (90 min, only after more labels): require an assistant turn that lists the same order and items followed by a user confirmation. Offline variants tested so far did not win (broader wording: false blocks 9 → 4 but missed 3 of 5 labelled true violations).
 10. **Guard lab S0 (payable) runs** (35 min, about 20 calls): measure the false-block rate before claiming the guard is safe.
 11. **Regression tests** (45 + 30 min): OCR fixtures for receipt-000 and invoice-0142/0143 with CER limits, and an extraction score test from saved run JSON, so these numbers are reproducible on every change.
+
+---
+
+## 5. Expanded evaluation (2026-09-27, 14:45–15:07 UTC)
+
+In short: across 40 new documents, OCR reads clean text well and totals are usually right (18/20 SROIE). But the review labels miss about 1 in 4 wrong OCR lines, dates and addresses are not extracted at all, Indonesian amounts are sometimes read 1000x too small, and 4 of the 7 planted three-way problems are not raised as differences. HTTP 429 rate limits push some runs onto the smaller fallback model, and those runs lose fields.
+
+**Setup.** `scripts/eval/run_eval.py` posted each document to `/api/documents/analyze` the same way `seed_demo.seed_document` does, against my own server (`:8391`, fresh `VARELQ_DB`, hosted `nemotron-ocr-v2`, LLM `nemotron-3-super-120b-a12b`, `NIM_CONCURRENCY=2`, client concurrency 2, 240 s timeout). Receipts were posted as the invoice role only. Synthetic sets were posted with all three roles. `scripts/eval/score.py` scored the raw responses, and all numbers below are in `scripts/eval/results.json`.
+- **Code evaluated:** `documents.py` sha256 `ed2af099f3c1…` and `server.py` `800f66188f7a…`, unchanged since commit `9cb23f9` "Accuracy quick wins" (14:41 UTC). HEAD was `80c2749` when I scored, and neither file changed after `9cb23f9`.
+- **Two full passes:** run 1 (headline) and run 2 (repeat). The demo server on :8390 was not touched. The hosted OCR endpoint serves the same model as the L4 (the first spot check found identical text on 36/37 blocks).
+
+### 5.1 Results per dataset (run 1 unless stated; 95% Wilson intervals in brackets)
+
+| Dataset | n | Metric | Value | Basis |
+|---|---|---|---|---|
+| SROIE 2019 (MIT) | 20 receipts | Company = extracted supplier (token-sort ratio ≥ 0.9) | 14/20 = 70% (48–86%) | `NNN.json` company |
+| | | Company, lenient (every ground-truth word present) | 16/20 = 80% (58–92%) | same |
+| | | Total (numeric, ±0.01) | 18/20 = 90% (70–97%) | `NNN.json` total |
+| | | Date | 0/20 (0–16%) | the response has no date field |
+| | | Address | 0/20 (0–16%) | the response has no address field |
+| | | Run 2: company / total | 12/20 = 60% (39–78%) / 16/20 = 80% (58–92%) | 2 of the 20 fell back to the small model after HTTP 429 and lost every field |
+| | | OCR CER, all characters, case-insensitive | 10.2% (1110/10854) | box text `NNN.csv`, one-to-one line alignment |
+| | | OCR CER, letters and digits, case-insensitive | 8.0% (696/8714) | same |
+| | | OCR CER, all characters, case-sensitive | 34.0% (3692/10854) | inflated: SROIE box text is mostly upper case, OCR keeps mixed case |
+| | 943 matched OCR blocks | Wrong when labelled "Verify" (< 0.80) | 56/85 = 66% (55–75%) | block ≠ its ground-truth line (case-insensitive) |
+| | | Wrong when labelled "Check" (0.80–0.90) | 99/312 = 32% (27–37%) | same |
+| | | Wrong with no label (≥ 0.90) | 55/546 = 10% (8–13%) | same |
+| | | Wrong blocks that carry any label (recall) | 155/210 = 74% (68–79%) | same |
+| | | Labelled blocks that are wrong (precision) | 155/397 = 39% (34–44%) | same |
+| CORD v2 test (CC-BY-4.0) | 10 receipts | Total | 6/9 = 67% (35–88%) | `total_price`; receipt 009 has none |
+| | | Tax | 2/4 = 50% (15–85%) | `tax_price` |
+| | | Subtotal (net) | 3/8 = 38% (14–69%) | `subtotal_price` |
+| | | Menu prices found among extracted line totals | 7/16 = 44% (23–67%) | `menu[].price` |
+| | | Amounts read 1000x too small ("60.000" read as 60.0) | 4 values (receipts 000, 005) | Indonesian thousands separator |
+| | | Run 2: total / menu prices | 4/9 = 44% (19–73%) / 3/16 = 19% (7–43%) | 5 of the 10 on the fallback model (HTTP 429) |
+| Synthetic three-way (in-repo) | 7 planted problems in 7 sets | Raised as a difference | 3/7 = 43% (16–75%), same in both runs | `expected_findings` |
+| | | Short delivery, over-invoicing, VAT miscalculation | 3/3 detected | `qty_received_vs_ordered`, `qty_invoiced_vs_ordered`, `tax_vs_rate` |
+| | | Price mismatch (degraded JPEG) | missed | SKU column merged into the description, so no SKU matched the PO and cross-checks were skipped (a limitation says so) |
+| | | Missing receiving line, duplicate line, currency mismatch | 0/3 as differences, 3/3 shown only as limitation text | no check produces a difference for these |
+| | 3 clean controls | Zero differences | run 1 2/3, run 2 3/3; together 5/6 (44–97%) | |
+| | 10 sets | False-positive differences | run 1: 6; run 2: 1 | see 5.2 |
+| All | 40 requests per run | HTTP 200 | 40/40 in both runs; run 1 first attempt had 2 client timeouts at 240 s (SROIE 055, eval-clean-eur-4lines), both fine on retry | |
+| | | OCR fallback used | 0/80 pages (0–5%) | `ocr_pages[].fallback_used`; all on the hosted endpoint |
+| | | LLM fallback used (HTTP 429 on the primary model) | run 1 2/40 = 5% (1–17%); run 2 8/40 = 20% (11–35%) | response `fallback_used`, `model` |
+| | | OCR latency p50 / p95 | 558 / 842 ms (n=40); run 2 540 / 696 ms | `latency_ms` |
+| | | End-to-end latency p50 / p95 | 12.7 / 40.7 s; run 2 25.4 / 72.8 s | client wall time, includes rate-limit waits |
+| | 40 documents in both runs | Identical OCR text between runs | 40/40 (91–100%) | block text |
+| | | Identical key fields (supplier, total, net, VAT, item count) | 28/40 = 70% (55–82%) | 7 of the 12 changed documents used the fallback model in one of the runs |
+| | | Identical set of differences | 32/40 = 80% (65–90%) | |
+
+### 5.2 Notable errors
+
+1. **Wrong supplier:**
+   - SROIE 007: the handwritten customer name "tan chay yee" (line 1) was taken as the supplier instead of S.H.H. MOTOR. The total was not extracted either.
+   - OCR misreads copied through: 031 "AEON" became "DEEN CO. (M) BHD", 043 "32 PUB" became "D0 PUB", 046 "PASAR MINI" became "PASAR NINE".
+   - The remaining two misses (040 "THREE STOOGES BISTRO & CAFE" and 157 with a registration number) are fuller than the SROIE key and count as correct under the lenient rule.
+2. **Wrong total:** SROIE 169 took "Cash RM30.30" (30.30) instead of the total RM29.30.
+3. **Indonesian amounts:** CORD 000 and 005 read "60.000", "5.455" and "31.000" as decimals (60.0, 5.455, 31.0) instead of thousands. No check flags the currency or magnitude.
+4. **Rounding false positive:** on the price-mismatch set, `tax_vs_rate` reports 354.635 against 354.64 as a difference in both runs. This is a 3-decimal TND amount compared at 2 decimals.
+5. **Degraded clean set:** on eval-clean-eur-4lines (run 1), each line total was read as the unit price (18.40 instead of 460 × 18.40). That produced 4 false `line_qty_x_price` differences and 1 false `line_sum_vs_net`. Run 2 read the same image correctly.
+6. **High-score OCR errors with no label** (55 blocks at ≥ 0.90), for example 037 postcode "81750" read as "B1750" (0.928), 031 "AMOUNT" read as "Awount" (0.923), "INCL" read as "Inci" (0.911).
+7. **Rate-limit fallback:** runs that fell back to `nemotron-3.5-lightning-30b-a3b` after HTTP 429 often returned no fields at all (SROIE 061 and 178 in run 2 lost supplier, total, net and VAT). Nothing in the response warns the user beyond the model name.
+8. **Latency:** run 1 needed 240 s or more for 2 documents on the first attempt, and run 2 p95 was 73 s, both driven by 429 retries under a 40 requests/minute limit shared by 2 concurrent clients.
+
+### 5.3 What changed since the first spot check (sections 1–3)
+
+- **Sample size:** 1 real receipt and 2 synthetic invoices before; 30 real receipts and 10 new synthetic sets now, each run twice.
+- **Review labels:** the "Verify" band looked perfect before (4/4 blocks under 0.80 were wrong) and is now 56/85 (66%). The unlabelled band was 49/50 right before and is 491/546 (90%) right now. The labels are useful, but about 1 in 4 wrong lines carries no label.
+- **Receipt OCR error rate:** letters and digits went from 1.9% on one receipt (against a hand-corrected truth) to 8.0% on 20 receipts (against the raw SROIE box text). The new number includes SROIE annotation errors, for example 004 "UPERATOR" where the OCR correctly read "OPERATOR".
+- **Receipt fields:** totals were 1/1 right before and are 18/20 now. Supplier was wrong on the one receipt before and is right on 14/20 now.
+- **Three-way checks:** the first check found 2/2 planted problems. The wider set shows that 3 kinds of problem (missing receiving line, duplicate line, currency mismatch) have no difference check at all, and that degraded scans can break SKU matching.
+- **Invented net:** the quick-wins prompt change was meant to stop net being invented. It was not measured separately here, but CORD subtotals were still missing in 5/8 cases, so net is now missed rather than invented.
+- **Rate limits** remain the main source of run-to-run variation (2/40 and 8/40 fallbacks).
+
+### 5.4 Limitations
+
+- **Small samples:** 20 SROIE, 10 CORD and 10 synthetic sets, with wide intervals (for example total 70–97%). The two runs use the same documents, so they measure repeatability, not new data.
+- **SROIE ground truth has its own errors:** box text is mostly upper case, contains annotation typos, and uses a company string that is sometimes shorter than the printed name. The case-insensitive and lenient metrics are reported next to the strict ones.
+- **OCR line alignment is approximate:** it is greedy one-to-one by similarity, so a split or merged line counts as errors. A block counts as right only if it equals or is part of its matched line.
+- **CORD:** images come from the datasets-server at reduced size (for example 432x648), so OCR is harder than on the originals. Ground-truth amounts are strings normalised by `score.py`. The receipts have no supplier or date keys, so only amounts are scored.
+- **Synthetic sets** come from the same generator the app was developed against, so the results are optimistic for clean images. Only 4 of the 10 are degraded, and the planted problems were designed by us.
+- **Licences:** SROIE is MIT (repository licence in `public-data/sroie/LICENSE`). CORD is CC-BY-4.0 with attribution in `public-data/cord/LICENSE`. The synthetic sets contain no third-party data.
+- **Not measured:** the self-hosted L4 endpoint, LLM calls without rate-limit pressure, and dates and addresses (no schema fields).

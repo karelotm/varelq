@@ -1,0 +1,45 @@
+{
+  "source_row": 3,
+  "expected": {
+    "menu": [
+      {
+        "nm": "DONAT GULA",
+        "cnt": "1X",
+        "price": "11,000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "11,000"
+    },
+    "total": {
+      "total_price": "11,000",
+      "cashprice": "11,000",
+      "menuqty_cnt": "1.00xITEMs"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "DONAT GULA",
+      "unitprice": "@11000",
+      "cnt": "1X",
+      "price": "11,000"
+    },
+    "sub_total": {
+      "subtotal_price": "11,000"
+    },
+    "total": {
+      "total_price": "11,000",
+      "cashprice": "11,000",
+      "menuqty_cnt": "1.00xITEMs"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 3,
+    "image_size": {
+      "width": 864,
+      "height": 1296
+    }
+  }
+}

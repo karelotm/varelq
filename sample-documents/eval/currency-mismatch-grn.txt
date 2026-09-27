@@ -1,0 +1,9 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9110
+Order reference: PO-9110
+Supplier: Bizerte Marine Services (fictional)
+Received at: Carthage Fabrication warehouse, 2026-09-12
+SKU | Description | Quantity received
+RP-12 | Mooring rope 12mm 50m | 8
+FD-30 | Boat fender 30cm | 24
+Received by: warehouse clerk (fictional)

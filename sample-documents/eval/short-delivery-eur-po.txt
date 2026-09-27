@@ -1,0 +1,13 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9105
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Bordeaux Fixations SA (fictional)
+Order date: 2026-07-28
+Currency: EUR
+SKU | Description | Quantity | Unit price | Line total
+FX-M6 | Machine screw M6x20 | 1000 | 0.12 | 120.00
+FX-W6 | Flat washer M6 | 1000 | 0.03 | 30.00
+Net: 150.00 EUR
+VAT rate: 20%
+VAT: 30.00 EUR
+Total: 180.00 EUR

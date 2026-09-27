@@ -1,0 +1,17 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9103
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Atlas Emballage SARL (fictional)
+Order date: 2026-07-28
+Currency: MAD
+SKU | Description | Quantity | Unit price | Line total
+CB-40 | Carton box 40x30x30 | 500 | 6.80 | 3400.00
+CB-60 | Carton box 60x40x40 | 300 | 11.20 | 3360.00
+TP-48 | Packing tape 48mm | 120 | 9.50 | 1140.00
+SW-50 | Stretch wrap 50cm | 40 | 64.00 | 2560.00
+BW-10 | Bubble wrap roll 10m | 30 | 48.75 | 1462.50
+LB-A6 | Shipping label A6 roll | 25 | 37.40 | 935.00
+Net: 12857.50 MAD
+VAT rate: 20%
+VAT: 2571.50 MAD
+Total: 15429.00 MAD

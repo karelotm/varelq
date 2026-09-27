@@ -1,0 +1,9 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9105
+Order reference: PO-9105
+Supplier: Bordeaux Fixations SA (fictional)
+Received at: Carthage Fabrication warehouse, 2026-08-25
+SKU | Description | Quantity received
+FX-M6 | Machine screw M6x20 | 750
+FX-W6 | Flat washer M6 | 1000
+Received by: warehouse clerk (fictional)

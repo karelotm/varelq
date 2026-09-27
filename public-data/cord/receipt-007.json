@@ -1,0 +1,46 @@
+{
+  "source_row": 7,
+  "expected": {
+    "menu": [
+      {
+        "nm": "Kupon 15",
+        "price": "100,000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "100,909",
+      "tax_price": "10,091"
+    },
+    "total": {
+      "total_price": "111,000",
+      "cashprice": "Rp. 111,000"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "Kupon 15",
+      "price": "100,000",
+      "sub": {
+        "nm": "ADD CHICKEN BOX",
+        "price": "909"
+      }
+    },
+    "sub_total": {
+      "subtotal_price": "100,909",
+      "tax_price": "10,091"
+    },
+    "total": {
+      "total_price": "111,000",
+      "cashprice": "Rp. 111,000"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 7,
+    "image_size": {
+      "width": 576,
+      "height": 864
+    }
+  }
+}

@@ -1,0 +1,15 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9107
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Cap Bon Plastiques (fictional)
+Order date: 2026-07-28
+Currency: TND
+SKU | Description | Quantity | Unit price | Line total
+PE-200 | PE drum 200L | 10 | 85.000 | 850.000
+PP-20 | PP jerrycan 20L | 60 | 9.500 | 570.000
+LD-5 | LDPE bottle 5L | 100 | 2.400 | 240.000
+CP-63 | Screw cap 63mm | 500 | 0.180 | 90.000
+Net: 1750.000 TND
+VAT rate: 19%
+VAT: 332.500 TND
+Total: 2082.500 TND

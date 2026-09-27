@@ -1,0 +1,13 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9109
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Marrakech Agro Equipement (fictional)
+Order date: 2026-07-28
+Currency: MAD
+SKU | Description | Quantity | Unit price | Line total
+DR-16 | Drip line 16mm 100m | 15 | 240.00 | 3600.00
+EM-2 | Emitter 2L/h pack 100 | 20 | 55.00 | 1100.00
+Net: 4700.00 MAD
+VAT rate: 20%
+VAT: 940.00 MAD
+Total: 5640.00 MAD

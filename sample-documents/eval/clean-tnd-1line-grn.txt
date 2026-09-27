@@ -1,0 +1,8 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9101
+Order reference: PO-9101
+Supplier: Medina Office Supplies (fictional)
+Received at: Carthage Fabrication warehouse, 2026-08-03
+SKU | Description | Quantity received
+PAP-A4 | Copy paper A4 80g box | 40
+Received by: warehouse clerk (fictional)

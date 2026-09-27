@@ -1,0 +1,58 @@
+{
+  "source_row": 8,
+  "expected": {
+    "menu": [
+      {
+        "nm": "[REG] BLACK SAKURA",
+        "cnt": "1",
+        "price": "45,455"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "45,455",
+      "tax_price": "4,545",
+      "etc": "0"
+    },
+    "total": {
+      "total_price": "50,000",
+      "creditcardprice": "50,000"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "[REG] BLACK SAKURA",
+      "cnt": "1",
+      "price": "45,455",
+      "sub": [
+        {
+          "nm": "COOKIE DOH SAUCES",
+          "cnt": "1",
+          "price": "0"
+        },
+        {
+          "nm": "NATA DE COCO",
+          "cnt": "1",
+          "price": "0"
+        }
+      ]
+    },
+    "sub_total": {
+      "subtotal_price": "45,455",
+      "tax_price": "4,545",
+      "etc": "0"
+    },
+    "total": {
+      "total_price": "50,000",
+      "creditcardprice": "50,000"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 8,
+    "image_size": {
+      "width": 864,
+      "height": 1296
+    }
+  }
+}

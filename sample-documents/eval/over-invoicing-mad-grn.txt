@@ -1,0 +1,10 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9106
+Order reference: PO-9106
+Supplier: Fes Textile Industrie (fictional)
+Received at: Carthage Fabrication warehouse, 2026-08-28
+SKU | Description | Quantity received
+WG-L | Work gloves size L | 200
+CV-M | Coverall cotton size M | 80
+HV-V | Hi-vis vest | 150
+Received by: warehouse clerk (fictional)

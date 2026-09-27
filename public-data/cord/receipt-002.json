@@ -1,0 +1,50 @@
+{
+  "source_row": 2,
+  "expected": {
+    "menu": [
+      {
+        "nm": "JASMINE MT ( L )",
+        "cnt": "1",
+        "price": "24,000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "28,000"
+    },
+    "total": {
+      "total_price": "28,000",
+      "cashprice": "100,000",
+      "changeprice": "72,000",
+      "menuqty_cnt": "1"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "JASMINE MT ( L )",
+      "cnt": "1",
+      "price": "24,000",
+      "sub": {
+        "nm": "COCONUT JELLY ( L )",
+        "price": "4,000"
+      }
+    },
+    "sub_total": {
+      "subtotal_price": "28,000"
+    },
+    "total": {
+      "total_price": "28,000",
+      "cashprice": "100,000",
+      "changeprice": "72,000",
+      "menuqty_cnt": "1"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 2,
+    "image_size": {
+      "width": 864,
+      "height": 1296
+    }
+  }
+}

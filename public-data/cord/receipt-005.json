@@ -1,0 +1,44 @@
+{
+  "source_row": 5,
+  "expected": {
+    "menu": [
+      {
+        "nm": "TRAD KY TOAST CARTE",
+        "price": "28.182"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "28.182",
+      "tax_price": "2.818"
+    },
+    "total": {
+      "total_price": "31.000",
+      "cashprice": "31.000",
+      "menuqty_cnt": "1.00"
+    }
+  },
+  "gt_parse": {
+    "menu": {
+      "nm": "TRAD KY TOAST CARTE",
+      "price": "28.182"
+    },
+    "sub_total": {
+      "subtotal_price": "28.182",
+      "tax_price": "2.818"
+    },
+    "total": {
+      "total_price": "31.000",
+      "cashprice": "31.000",
+      "menuqty_cnt": "1.00"
+    }
+  },
+  "meta": {
+    "version": "2.0.0",
+    "split": "test",
+    "image_id": 5,
+    "image_size": {
+      "width": 2304,
+      "height": 4096
+    }
+  }
+}

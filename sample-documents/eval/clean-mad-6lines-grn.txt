@@ -1,0 +1,13 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9103
+Order reference: PO-9103
+Supplier: Atlas Emballage SARL (fictional)
+Received at: Carthage Fabrication warehouse, 2026-08-19
+SKU | Description | Quantity received
+CB-40 | Carton box 40x30x30 | 500
+CB-60 | Carton box 60x40x40 | 300
+TP-48 | Packing tape 48mm | 120
+SW-50 | Stretch wrap 50cm | 40
+BW-10 | Bubble wrap roll 10m | 30
+LB-A6 | Shipping label A6 roll | 25
+Received by: warehouse clerk (fictional)

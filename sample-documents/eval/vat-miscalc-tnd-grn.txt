@@ -1,0 +1,11 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9107
+Order reference: PO-9107
+Supplier: Cap Bon Plastiques (fictional)
+Received at: Carthage Fabrication warehouse, 2026-09-01
+SKU | Description | Quantity received
+PE-200 | PE drum 200L | 10
+PP-20 | PP jerrycan 20L | 60
+LD-5 | LDPE bottle 5L | 100
+CP-63 | Screw cap 63mm | 500
+Received by: warehouse clerk (fictional)
