@@ -77,7 +77,7 @@ The seeded report confirms the planning pre-check: R1 fires in 12 runs (22 occur
 **What decides and what does not:** detection (rules R1–R3), priority, evaluation, replay, the lab's safety oracle and the invoice checks are deterministic Python. The model explains findings and acts as the lab agent. It never decides what is flagged.
 
 **AI disclosure** *(form box)*:
-> Models: Nemotron 3 Super 120B (NVIDIA Build) explains finding groups and runs the lab agent; nemotron-ocr-v2, a NIM on a Brev L4 (hosted fallback), reads invoices. Detection, ranking, evaluation and replay are deterministic code; model text is tagged. Data: τ-bench via AgentRx (MIT), one SROIE receipt, synthetic lab and invoice data. Code: Codex baseline before the event; Claude Code multi-agent build today.
+> Models: Nemotron 3 Super 120B (NVIDIA Build) explains finding groups and runs the lab agent; nemotron-ocr-v2, a NIM on a Brev L4 (hosted fallback), reads invoices. Detection, ranking, evaluation and replay are deterministic code; model text is tagged. Data: τ-bench via AgentRx (MIT), one SROIE receipt, synthetic lab and invoice data. Code: Codex prototype earlier in the event; Claude Code multi-agent build today.
 
 ### Datasets and licences
 
