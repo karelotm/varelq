@@ -53,7 +53,7 @@ Open http://127.0.0.1:8080/. `python run.py` does the same but asks for the key 
 | `AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` | Guard lab agent model |
 | `NVIDIA_EMBED_MODEL` | `nvidia/nemotron-3-embed-1b` | Embedding model (group cohesion only; groups are not formed by embeddings) |
 | `NVIDIA_BASE_URL` | `https://integrate.api.nvidia.com/v1` | Chat completions endpoint |
-| `NVIDIA_OCR_URL` | hosted `ai.api.nvidia.com` OCR | Set to a self-hosted NIM, for example `http://127.0.0.1:8000/v1/infer` |
+| `NVIDIA_OCR_URL` | hosted `ai.api.nvidia.com` OCR | Set to a self-hosted NIM, for example `http://127.0.0.1:8000/v1/ocr` |
 | `NVIDIA_OCR_LABEL` | none | Label shown in the UI, for example `NIM on Brev L4` |
 | `NVIDIA_OCR_FALLBACK` | none | `hosted`: if the self-hosted OCR fails or times out, retry once on the hosted endpoint and mark the page `fallback_used` |
 

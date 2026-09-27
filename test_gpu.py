@@ -22,7 +22,7 @@ class GpuStatusTests(unittest.TestCase):
         self.assertIsInstance(body['recent'], list)
 
     def test_self_hosted_probe_is_cached_and_failure_is_not_ready(self):
-        env = {'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/infer', 'NVIDIA_OCR_LABEL': 'NIM on Brev L4', 'NVIDIA_OCR_FALLBACK': 'hosted'}
+        env = {'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr', 'NVIDIA_OCR_LABEL': 'NIM on Brev L4', 'NVIDIA_OCR_FALLBACK': 'hosted'}
         with patch.dict('os.environ', env, clear=True):
             with patch.object(gpu, 'urlopen', side_effect=OSError('refused')) as probe:
                 first, second = gpu.status(), gpu.status()

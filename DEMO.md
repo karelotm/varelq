@@ -24,7 +24,7 @@ SCRATCH='C:\Users\PC\AppData\Local\Temp\claude\C--dev-Valerq\3df3c8a4-3640-449e-
 cd /c/dev/Valerq
 # GPU tunnel up first if the 14:30 go/no-go passed: curl -sf http://127.0.0.1:8000/v1/health/ready
 NVIDIA_API_KEY="$(cat "$SCRATCH/nvidia.key")" \
-NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/infer NVIDIA_OCR_LABEL="NIM on Brev L4" NVIDIA_OCR_FALLBACK=hosted \
+NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/ocr NVIDIA_OCR_LABEL="NIM on Brev L4" NVIDIA_OCR_FALLBACK=hosted \
 VARELQ_DB="$SCRATCH/demo.sqlite3" PORT=8390 python server.py
 ```
 

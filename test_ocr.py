@@ -31,20 +31,20 @@ class OCRTests(unittest.TestCase):
         return {'text_prediction': {'text': 'Total 9.00', 'confidence': 0.9}, 'bounding_box': {'points': [{'x': 0.1, 'y': 0.2}]}}
 
     def test_self_hosted_success_reports_kind_latency_and_label(self):
-        env = {'NVIDIA_API_KEY': 'build-secret', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/infer',
+        env = {'NVIDIA_API_KEY': 'build-secret', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr',
                'NVIDIA_OCR_LABEL': 'NIM on Brev L4', 'NVIDIA_OCR_FALLBACK': 'hosted'}
         with patch.dict('os.environ', env, clear=True):
             with patch.object(ocr, 'urlopen', return_value=self.response([self.detection()])) as request:
                 result = ocr.recognize(self.image())
         self.assertEqual(request.call_count, 1)
-        self.assertEqual(request.call_args.args[0].full_url, 'http://127.0.0.1:8000/v1/infer')
+        self.assertEqual(request.call_args.args[0].full_url, 'http://127.0.0.1:8000/v1/ocr')
         self.assertEqual((result['endpoint_kind'], result['fallback_used'], result['provider']), ('self-hosted', False, 'NIM on Brev L4'))
         self.assertIsInstance(result['latency_ms'], int)
         self.assertEqual(ocr.recent_latencies()[0]['endpoint_kind'], 'self-hosted')
 
     def test_tunnel_down_falls_back_to_hosted_once(self):
         from urllib.error import URLError
-        env = {'NVIDIA_API_KEY': 'build-secret', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/infer', 'NVIDIA_OCR_FALLBACK': 'hosted'}
+        env = {'NVIDIA_API_KEY': 'build-secret', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr', 'NVIDIA_OCR_FALLBACK': 'hosted'}
         calls = []
 
         def fake(request, timeout):
@@ -68,7 +68,7 @@ class OCRTests(unittest.TestCase):
 
     def test_no_fallback_without_opt_in(self):
         from urllib.error import URLError
-        with patch.dict('os.environ', {'NVIDIA_API_KEY': 'k', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/infer'}, clear=True):
+        with patch.dict('os.environ', {'NVIDIA_API_KEY': 'k', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr'}, clear=True):
             with patch.object(ocr, 'urlopen', side_effect=URLError('down')) as request:
                 with self.assertRaisesRegex(ValueError, 'unavailable'):
                     ocr.recognize(self.image())
@@ -76,7 +76,7 @@ class OCRTests(unittest.TestCase):
 
     def test_client_error_does_not_fall_back(self):
         from urllib.error import HTTPError
-        env = {'NVIDIA_API_KEY': 'k', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/infer', 'NVIDIA_OCR_FALLBACK': 'hosted'}
+        env = {'NVIDIA_API_KEY': 'k', 'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr', 'NVIDIA_OCR_FALLBACK': 'hosted'}
         with patch.dict('os.environ', env, clear=True):
             with patch.object(ocr, 'urlopen', side_effect=HTTPError('u', 422, 'bad', {}, None)) as request:
                 with self.assertRaisesRegex(ValueError, 'HTTP 422'):
@@ -84,7 +84,7 @@ class OCRTests(unittest.TestCase):
         self.assertEqual(request.call_count, 1)
 
     def test_configuration_shape(self):
-        env = {'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/infer', 'NVIDIA_OCR_LABEL': 'NIM on Brev L4', 'NVIDIA_OCR_FALLBACK': 'hosted'}
+        env = {'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr', 'NVIDIA_OCR_LABEL': 'NIM on Brev L4', 'NVIDIA_OCR_FALLBACK': 'hosted'}
         with patch.dict('os.environ', env, clear=True):
             config = ocr.configuration()
         self.assertEqual({k: config[k] for k in ('label', 'mode', 'fallback', 'configured')},

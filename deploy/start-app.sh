@@ -28,7 +28,7 @@ docker rm -f varelq-app varelq-gate >/dev/null 2>&1 || true
 # --network host: the app reaches the NIM on VM loopback; server.py binds 127.0.0.1 only.
 docker run -d --name varelq-app --restart unless-stopped --network host \
   -e NVIDIA_API_KEY -e PORT=8390 -e VARELQ_DB=/data/varelq.sqlite3 \
-  -e NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/infer -e 'NVIDIA_OCR_LABEL=NIM on Brev L4' -e NVIDIA_OCR_FALLBACK=hosted \
+  -e NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/ocr -e 'NVIDIA_OCR_LABEL=NIM on Brev L4' -e NVIDIA_OCR_FALLBACK=hosted \
   -e LAB_RUN_BUDGET_S="${LAB_RUN_BUDGET_S:-150}" -e LAB_LLM_CONCURRENCY="${LAB_LLM_CONCURRENCY:-2}" \
   -e NIM_CONCURRENCY="${NIM_CONCURRENCY:-2}" \
   -e PYTHONUNBUFFERED=1 \

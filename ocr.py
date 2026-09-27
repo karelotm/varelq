@@ -1,7 +1,7 @@
 """Image OCR with NVIDIA nemotron-ocr-v2: self-hosted NIM first, hosted NIM as honest fallback.
 
 Environment:
-  NVIDIA_OCR_URL       self-hosted endpoint, e.g. http://127.0.0.1:8000/v1/infer (unset = hosted only)
+  NVIDIA_OCR_URL       self-hosted endpoint, e.g. http://127.0.0.1:8000/v1/ocr (unset = hosted only)
   NVIDIA_OCR_LABEL     human label for the self-hosted endpoint, e.g. "NIM on Brev L4"
   NVIDIA_OCR_FALLBACK  "hosted" to retry once on the hosted endpoint after a connection error,
                        timeout or 5xx from the self-hosted endpoint; anything else disables fallback

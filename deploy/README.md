@@ -36,7 +36,7 @@ The forward binds 0.0.0.0 only inside the client container; Docker publishes it 
 ## App configuration
 
 ```
-NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/infer
+NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/ocr
 NVIDIA_OCR_LABEL="NIM on Brev L4"
 NVIDIA_OCR_FALLBACK=hosted
 ```
