@@ -1,5 +1,24 @@
 # VARELQ
 
+<p align="center">
+  <a href="https://grade-gods-font-checks.trycloudflare.com"><img alt="Live demo" src="https://img.shields.io/badge/LIVE_DEMO-TRY_IT-d4f542?style=for-the-badge&labelColor=111111"></a>
+  <a href="#screenshots"><img alt="Screenshots" src="https://img.shields.io/badge/SCREENS-6-2f6b4f?style=for-the-badge&labelColor=111111"></a>
+  <a href="ACCURACY.md"><img alt="Accuracy report" src="https://img.shields.io/badge/ACCURACY-MEASURED-f4f1ea?style=for-the-badge&labelColor=111111"></a>
+</p>
+
+<p align="center">
+  <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white">
+  <img alt="NVIDIA Nemotron" src="https://img.shields.io/badge/NVIDIA-Nemotron_3_Super_120B-76B900?logo=nvidia&logoColor=white">
+  <img alt="NVIDIA NIM OCR" src="https://img.shields.io/badge/NIM-nemotron--ocr--v2-76B900?logo=nvidia&logoColor=white">
+  <img alt="NVIDIA Brev L4" src="https://img.shields.io/badge/NVIDIA_Brev-L4-111111?logo=nvidia&logoColor=76B900">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-stdlib-003B57?logo=sqlite&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-156_passing-2f6b4f">
+  <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-d4f542?labelColor=111111"></a>
+</p>
+
+<p align="center"><b>AI agents now approve payments and change orders. When they fail, nobody sees it.</b><br>
+VARELQ finds the recurring failures in agent conversations and tool calls, shows the exact step that broke, and proves the fix with a guarded rerun.</p>
+
 VARELQ finds the hidden failures in AI operations agents. It pins each failure to the exact step and tool call, groups the recurring patterns, ranks them with evidence, and tests the fix twice: first by replaying a guard over the recorded runs, then with a live guarded rerun.
 
 Built for the GOMYCODE × NVIDIA "Come Build with AI" hackathon, 27 September 2026. The submission kit is in [SUBMISSION.md](SUBMISSION.md), and the video script is in [DEMO.md](DEMO.md).
