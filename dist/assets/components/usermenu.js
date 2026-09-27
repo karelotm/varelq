@@ -20,6 +20,7 @@ const EXTRA = {
   lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
   sliders: '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
   'chevrons-up-down': '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+  compass: '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/>',
 };
 /** icon(name, size, cls): icons.js first, then the extra set above. */
 export function icon(name, size = 16, cls = '') {
@@ -195,6 +196,7 @@ function menuHtml() {
   <div class="xpop-sub" role="group" aria-label="${esc(t('user.language'))}" hidden>
     ${LANGS.map((l) => `<button type="button" role="menuitemradio" aria-checked="${l.id === lang}" class="xpop-item" data-lang="${l.id}" lang="${l.id}"><span class="xpop-check">${l.id === lang ? icon('check', 14) : ''}</span><span>${esc(l.label)}</span></button>`).join('')}
   </div>
+  <button type="button" role="menuitem" class="xpop-item" data-act="tour">${icon('compass', 16)}<span>${esc(t('user.tour', 'Take the tour'))}</span></button>
   <a role="menuitem" class="xpop-item" href="${HELP_URL}" target="_blank" rel="noopener noreferrer" data-act="help">${icon('help-circle', 16)}<span>${esc(t('user.help'))}</span>${icon('external-link', 13, 'xpop-chev')}</a>
   <div class="xpop-sep" role="separator"></div>
   <button type="button" role="menuitem" class="xpop-item" data-act="logout">${icon('log-out', 16)}<span>${esc(t('user.logout'))}</span></button>`;
@@ -236,6 +238,7 @@ export function mountUserMenu(el, ctx) {
       if (act === 'settings') openSettingsLazy(undefined, ctx);
       else if (act === 'usage') openSettingsLazy('usage', ctx);
       else if (act === 'logout') logout(ctx);
+      else if (act === 'tour') import('./tour.js').then((m) => m.startTour()).catch((err) => console.warn('Tour failed to load', err));
     });
     pop.el.addEventListener('keydown', (e) => {
       const b = e.target.closest('[data-act="lang"]');

@@ -1,0 +1,50 @@
+/* First-visit guided tour: a dimmed page, a soft-ringed cutout over the target and a small card beside it. Tokens only. */
+.tour-root { position: fixed; inset: 0; z-index: 85; opacity: 0; transition: opacity var(--dur-3) var(--ease); }
+.tour-root.tour-in { opacity: 1; }
+
+/* Blocks clicks on the page underneath; also the full-page dim when there is no target. */
+.tour-block { position: absolute; inset: 0; background: var(--overlay); }
+.tour-root.tour-has-target .tour-block { background: transparent; }
+
+.tour-hole {
+  position: fixed; border-radius: var(--r-panel); pointer-events: none;
+  box-shadow: 0 0 0 1.5px var(--accent), 0 0 0 6px var(--tint), 0 0 0 200vmax var(--overlay);
+  transition: left var(--dur-3) var(--ease), top var(--dur-3) var(--ease), width var(--dur-3) var(--ease), height var(--dur-3) var(--ease);
+}
+.tour-hole[hidden] { display: none; }
+
+.tour-card {
+  position: fixed; width: min(340px, calc(100vw - 32px));
+  padding: var(--s4) var(--s5) var(--s4);
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--r-panel); box-shadow: var(--shadow-pop);
+  transition: left var(--dur-3) var(--ease), top var(--dur-3) var(--ease);
+}
+.tour-card:focus { outline: none; }
+.tour-card[data-step="welcome"] { width: min(420px, calc(100vw - 32px)); padding: var(--s5) var(--s5) var(--s4); }
+
+.tour-count { margin: 0 0 var(--s1); color: var(--text-3); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+.tour-title { margin: 0 0 var(--s2); font-family: var(--font-serif); font-size: var(--fs-lg); line-height: var(--lh-lg); font-weight: 500; letter-spacing: -0.01em; }
+.tour-card[data-step="welcome"] .tour-title { font-size: var(--fs-xl); line-height: var(--lh-xl); }
+.tour-body { margin: 0; color: var(--text-2); font-size: var(--fs-body); line-height: var(--lh-body); }
+
+.tour-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s4); }
+.tour-actions { display: inline-flex; gap: var(--s2); }
+.tour-skip {
+  padding: var(--s1) 0; border: 0; background: none; font: inherit; font-size: var(--fs-sm);
+  color: var(--text-2); cursor: pointer; border-radius: var(--r-control);
+}
+.tour-skip:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.tour-card button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* Narrow screens: a bottom sheet instead of a floating card. */
+.tour-root.tour-sheet .tour-card {
+  left: 0; right: 0; bottom: 0; top: auto; width: auto;
+  border-radius: var(--r-panel) var(--r-panel) 0 0; border-bottom: 0;
+  padding: var(--s5) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  transition: none;
+}
+
+/* Reduced or no motion: no animated transitions at all. */
+.tour-root.tour-still, .tour-root.tour-still .tour-hole, .tour-root.tour-still .tour-card { transition: none; }
+.tour-root.tour-still { opacity: 1; }

@@ -115,7 +115,7 @@ export function closePalette() {
 export function openPalette(opts) {
   if (open) { open.input.focus(); open.input.select(); return; }
   const { api, navigate, pages = [], t } = opts;
-  const pageItems = pages.map((p) => prep({ kind: 'page', icon: p.icon || 'arrow-right', href: p.href, label: p.label, sub: p.sub || '', keywords: p.keywords || '' }));
+  const pageItems = pages.map((p) => prep({ kind: 'page', icon: p.icon || 'arrow-right', href: p.href || '', run: typeof p.run === 'function' ? p.run : null, label: p.label, sub: p.sub || '', keywords: p.keywords || '' }));
   const GROUPS = [
     { key: 'pages', label: tr(t, 'palette.pages', 'Pages') },
     { key: 'documents', label: tr(t, 'palette.documents', 'Document runs') },
@@ -193,6 +193,7 @@ export function openPalette(opts) {
     const it = flat[i];
     if (!it) return;
     closePalette();
+    if (it.run) { it.run(); return; }
     if (newTab) window.open(it.href, '_blank', 'noopener');
     else navigate(it.href);
   }

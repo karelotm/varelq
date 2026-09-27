@@ -212,6 +212,7 @@ function paletteItems() {
     for (const it of g.items) pages.push({ label: t(it.key, it.label), href: `#${it.id}`, icon: it.icon, sub: t(GROUPS[g.group].key, GROUPS[g.group].label), keywords: `${it.label} ${it.id}` });
   }
   pages.push({ label: t('nav.organization', 'Organization'), href: '#organization', icon: 'building-2', keywords: 'organization org workspace members team' });
+  pages.push({ label: t('palette.tour', 'Take the tour'), run: startTourLazy, icon: 'help-circle', keywords: 'tour guide onboarding help introduction walkthrough visite' });
   pages.push({ label: t('nav.settings', 'Settings'), href: '#settings', icon: 'settings', sub: `${MOD_KEY}+,`, keywords: 'settings preferences theme language usage gpu privacy' });
   return pages;
 }
@@ -220,6 +221,11 @@ async function showPalette(query) {
   try { mod = await import('./components/palette.js'); } catch (err) { console.warn('Palette failed to load', err); toast(t('palette.unavailable', 'Search is unavailable.'), 'danger'); return; }
   setNavOpen(false);
   mod.openPalette({ api, navigate, pages: paletteItems(), t, query: typeof query === 'string' ? query : '' });
+}
+
+/* ---------- guided tour (components/tour.js) ---------- */
+function startTourLazy() {
+  import('./components/tour.js').then((m) => m.startTour()).catch((err) => console.warn('Tour failed to load', err));
 }
 
 /* ---------- language ---------- */
@@ -506,3 +512,5 @@ window.addEventListener('varelq:settings-close', closeSettingsRoute);
 route();
 refreshChips();
 setInterval(refreshChips, 60000);
+// First-visit tour (auto-starts once; also registers the window 'varelq:tour' event).
+import('./components/tour.js').then((m) => m.autoStartTour()).catch(() => { /* tour is optional */ });
