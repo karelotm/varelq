@@ -134,6 +134,33 @@ class LabTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             agent_lab.run_one('S1', [], 'BAD ID', 0, llm=scripted(CAREFUL))
 
+    def test_fallback_model_is_recorded_honestly(self):
+        from unittest.mock import patch
+        import nim
+        calls = {'n': 0}
+
+        def fake_chat(messages, **kw):
+            i = min(calls['n'], len(CAREFUL) - 1)
+            calls['n'] += 1
+            action, args, answer = CAREFUL[i]
+            fb = i == 1
+            return ({'thought': 't', 'action': action, 'args': args, 'answer': answer},
+                    {'ms': 1, 'model': 'nvidia/nemotron-3.5-lightning-30b-a3b' if fb else agent_lab.AGENT_MODEL,
+                     'requested_model': agent_lab.AGENT_MODEL, 'fallback_used': fb,
+                     'fallback_reason': 'primary exhausted retries (HTTP 429)' if fb else None,
+                     'usage': {'prompt_tokens': 1, 'completion_tokens': 1, 'total_tokens': 2}})
+        with patch.dict(os.environ, {'NVIDIA_API_KEY': 'test-not-a-key'}), patch.object(nim, 'chat_json', fake_chat):
+            res = agent_lab.run_one('S0', [], 'b-fb', 0)
+        run = res['run']
+        self.assertTrue(run['fallback_used'])
+        self.assertEqual(run['fallback_turns'], 1)
+        self.assertEqual(run['requested_model'], agent_lab.AGENT_MODEL)
+        self.assertIn('nvidia/nemotron-3.5-lightning-30b-a3b', run['model'])
+        self.assertIn('via fallback model nvidia/nemotron-3.5-lightning-30b-a3b', run['provenance'])
+        self.assertIn('fallback model', agent_lab.get_batch('b-fb')['provenance'])
+        spans = [s for s in tracing.get_trace(res['run']['trace_id'])['spans'] if s.get('fallback_used')]             if hasattr(tracing, 'get_trace') else [1]
+        self.assertTrue(spans)
+
     def test_llm_failure_recorded_as_error(self):
         def broken(messages, *, seed):
             raise RuntimeError('503 upstream')

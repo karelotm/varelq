@@ -52,6 +52,34 @@ class ServerTests(unittest.TestCase):
         ctype = resp.getheader('Content-Type') or ''
         return resp.status, (json.loads(raw) if ctype.startswith('application/json') else raw), resp
 
+    def test_usage_endpoint_shape(self):
+        with patch.dict(os.environ, {'NVIDIA_OCR_URL': ''}):
+            status, body, _ = self.req('GET', '/api/usage')
+        self.assertEqual(status, 200)
+        self.assertEqual(set(body), {'nvidia', 'ocr', 'gpu'})
+        for key in ('rpm_limit', 'last_60s', 'models', 'fallback_model', 'limiter', 'totals'):
+            self.assertIn(key, body['nvidia'])
+        self.assertIsInstance(body['nvidia']['models'], dict)
+        for key in ('calls', 'self_hosted', 'hosted', 'fallback_used', 'failures', 'latency_ms', 'recent'):
+            self.assertIn(key, body['ocr'])
+        self.assertFalse(body['gpu']['available'])
+        self.assertIn('reason', body['gpu'])
+        self.assertEqual(self.req('GET', '/api/usage', host=f'evil.example:{self.port}')[0], 400)
+
+    def test_model_provenance_names_actual_model(self):
+        server.begin_model_calls()
+        meta = {'model': 'nvidia/nemotron-3.5-lightning-30b-a3b', 'requested_model': server.MODEL,
+                'fallback_used': True, 'fallback_reason': 'x exhausted retries (HTTP 429)'}
+        with patch.object(server.nim, 'chat_json', lambda *a, **k: ({'ok': 1}, meta)):
+            server.nim_json('s', 'u')
+        prov = server.model_provenance()
+        self.assertEqual(prov['model'], 'nvidia/nemotron-3.5-lightning-30b-a3b')
+        self.assertEqual(prov['requested_model'], server.MODEL)
+        self.assertTrue(prov['fallback_used'])
+        server.begin_model_calls()
+        self.assertEqual(server.model_provenance(), {'model': server.MODEL, 'requested_model': server.MODEL,
+                                                     'fallback_used': False, 'fallback_reason': None})
+
     def test_bad_host_rejected_on_get_and_post(self):
         self.assertEqual(self.req('GET', '/api/health', host=f'evil.example:{self.port}')[0], 400)
         self.assertEqual(self.req('POST', '/api/decision', {'id': 'x'}, host=f'evil.example:{self.port}')[0], 400)

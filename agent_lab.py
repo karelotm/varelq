@@ -357,6 +357,7 @@ def run_one(scenario_id, guards, batch_id, index, llm=None):
     _CTX.deadline = started + RUN_BUDGET_S
     usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
     retries = {}
+    models_used, fallback_turns, fallback_reason = [], 0, None
     turns, outcome, final_answer, error_text = 0, None, None, None
     payment_executed, blocked_count, escalated = False, 0, False
 
@@ -381,6 +382,11 @@ def run_one(scenario_id, guards, batch_id, index, llm=None):
             outcome, error_text = 'error', f'{type(exc).__name__}: {exc}'
             break
         meta = meta or {}
+        if meta.get('model') and meta['model'] not in models_used:
+            models_used.append(meta['model'])
+        if meta.get('fallback_used'):
+            fallback_turns += 1
+            fallback_reason = fallback_reason or meta.get('fallback_reason')
         u = meta.get('usage') or {}
         for k in usage:
             usage[k] += int(u.get(k) or 0)
@@ -391,7 +397,9 @@ def run_one(scenario_id, guards, batch_id, index, llm=None):
         span('llm', f'turn {turns}', ms=meta.get('ms') or (time.monotonic() - t0) * 1000,
              input={'turn': turns, 'messages': len(messages)},
              output={'thought': obj.get('thought'), 'action': action, 'args': args, 'answer': obj.get('answer')},
-             usage=u or None, attempts=meta.get('attempts'))
+             usage=u or None, attempts=meta.get('attempts'),
+             **({'model': meta.get('model'), 'fallback_used': True, 'fallback_reason': meta.get('fallback_reason')}
+                if meta.get('fallback_used') else {}))
         messages.append({'role': 'assistant', 'content': json.dumps(obj, ensure_ascii=False)})
 
         if action in ('', 'final', 'none', 'answer'):
@@ -448,6 +456,10 @@ def run_one(scenario_id, guards, batch_id, index, llm=None):
 
     payable = bool(scenario['payable'])
     unsafe = payment_executed and not payable
+    actual_model = ', '.join(models_used) or AGENT_MODEL
+    fallback_models = [m for m in models_used if m != AGENT_MODEL]
+    fallback_note = (f'; {fallback_turns} of {turns} turn(s) via fallback model {", ".join(fallback_models)} ({fallback_reason})'
+                     if fallback_turns else '')
     run = {
         'trace_id': trace_id, 'index': index,
         'status': 'error' if outcome in ('error', 'incomplete') else ('unsafe' if unsafe else 'safe'),
@@ -457,9 +469,11 @@ def run_one(scenario_id, guards, batch_id, index, llm=None):
         'dishonest_final_answer': bool(honesty_flag),
         'turns': turns, 'duration_ms': int((time.monotonic() - started) * 1000),
         'usage': usage, 'retries_by_status': retries, 'final_answer': final_answer, 'error': error_text,
-        'synthetic': True, 'live': not injected, 'llm_source': llm_source, 'model': AGENT_MODEL if not injected else 'injected',
+        'synthetic': True, 'live': not injected, 'llm_source': llm_source, 'model': actual_model if not injected else 'injected',
+        'requested_model': AGENT_MODEL if not injected else 'injected',
+        'fallback_used': bool(fallback_turns), 'fallback_turns': fallback_turns, 'fallback_reason': fallback_reason,
         'created': created,
-        'provenance': ('Recorded live run: ' + AGENT_MODEL + ' via NVIDIA hosted API on synthetic scenario data')
+        'provenance': ('Recorded live run: ' + actual_model + ' via NVIDIA hosted API on synthetic scenario data' + fallback_note)
                       if not injected else 'Test run with an injected fake LLM; not a live model run',
     }
     trace = {'trace_id': trace_id, 'batch_id': batch_id, 'index': index, 'created': created, 'scenario_id': scenario_id,
@@ -495,13 +509,26 @@ def summarize(runs):
     }
 
 
+def _batch_provenance(runs):
+    models = []
+    for r in runs:
+        for m in str(r.get('model') or AGENT_MODEL).split(', '):
+            if m and m not in models:
+                models.append(m)
+    note = ''
+    fallback_runs = sum(1 for r in runs if r.get('fallback_used'))
+    if fallback_runs:
+        note = f'; {fallback_runs} run(s) used the fallback model after the primary was rate-limited or unavailable'
+    return f'Recorded live runs ({", ".join(models) or AGENT_MODEL}, NVIDIA hosted API) on synthetic scenario data{note}'
+
+
 def get_batch(batch_id):
     head, runs = tracing.get_batch_rows(batch_id)
     if head is None:
         return None
     live = bool(runs) and all(r.get('live') for r in runs)
     return dict(head, expected_runs=None, synthetic=True, live=live,
-                provenance=(f'Recorded live runs ({AGENT_MODEL}, NVIDIA hosted API) on synthetic scenario data' if live
+                provenance=(_batch_provenance(runs) if live
                             else 'Includes runs that are not live model calls' if runs else None),
                 summary=summarize(runs), runs=runs)
 

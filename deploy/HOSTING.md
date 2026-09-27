@@ -61,6 +61,13 @@ and `gate /api/health without code: HTTP 401`.
 | `GATE_CLIENT_IP_HEADER` | empty | Visitor-IP header set by the tunnel (`CF-Connecting-IP` for Cloudflare). Empty = per-socket IP, so all visitors share one bucket |
 | `GATE_PORT` / `GATE_UPSTREAM` | 8080 / `http://127.0.0.1:8390` | Loopback addresses |
 
+App-side NVIDIA settings passed by `start-app.sh` (export them on stdin like the key to override):
+`NVIDIA_RPM_LIMIT` (default 40, the Build key's requests/minute; the app waits up to 20 s rather than hit 429)
+and `NIM_FALLBACK_MODEL` (default `nvidia/nemotron-3.5-lightning-30b-a3b`, separate quota; used once after the
+primary model exhausts retries on 429/5xx/timeout and recorded as `fallback_used`; export an empty value to disable).
+`GET /api/usage` (through the gate) shows per-model counters, the rolling 60 s count and live L4 metrics from the
+NIM's `/v1/metrics`.
+
 Login attempts are limited to 5 per minute per visitor. The cookie is HttpOnly, SameSite=Strict,
 12 hours, and marked Secure when the tunnel sends `X-Forwarded-Proto: https`.
 

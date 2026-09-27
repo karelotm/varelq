@@ -24,8 +24,10 @@ class GpuStatusTests(unittest.TestCase):
     def test_self_hosted_probe_is_cached_and_failure_is_not_ready(self):
         env = {'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr', 'NVIDIA_OCR_LABEL': 'NIM on Brev L4', 'NVIDIA_OCR_FALLBACK': 'hosted'}
         with patch.dict('os.environ', env, clear=True):
-            with patch.object(gpu, 'urlopen', side_effect=OSError('refused')) as probe:
+            with patch.object(gpu, 'urlopen', side_effect=OSError('refused')) as probe,                     patch.object(gpu, '_fetch_metrics', side_effect=OSError('refused')):
                 first, second = gpu.status(), gpu.status()
+        self.assertEqual(first['live'], dict(first['live'], available=False, source='NIM /v1/metrics'))
+        self.assertIn('OSError', first['live']['reason'])
         self.assertEqual(probe.call_count, 1)
         self.assertEqual(probe.call_args.args[0], 'http://127.0.0.1:8000/v1/health/ready')
         self.assertEqual(probe.call_args.kwargs['timeout'], 2)
@@ -141,6 +143,72 @@ class DeployGateTests(unittest.TestCase):
         self.clock[0] += 61
         self.assertEqual([limiter.allow('b', 'POST')[0] for _ in range(2)], [True, False])  # daily cap 3 reached
         self.assertTrue(limiter.allow('a', 'GET')[0])
+
+
+
+SAMPLE_METRICS = """# HELP ocr_requests_total Total OCR requests
+# TYPE ocr_requests_total counter
+ocr_requests_total 1
+gpu_memory_total_bytes{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 24152899584
+gpu_memory_used_bytes{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 2889875456
+gpu_utilization_ratio{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 0
+gpu_memory_utilization_ratio{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 0
+gpu_power_usage_watts{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 30.435
+gpu_power_limit_watts{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 72
+gpu_temperature_celsius{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 62
+gpu_sm_clock_mhz{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 2040
+gpu_total_energy_consumption_joules{gpu="0",uuid="GPU-abc",name="NVIDIA L4"} 190682.576
+# TYPE ocr_request_latency_ms summary
+ocr_request_latency_ms{quantile="0.5"} 246.241
+ocr_request_latency_ms{quantile="0.95"} 310.5
+ocr_request_latency_ms{quantile="0.99"} 402
+ocr_request_latency_ms_sum 246.241
+ocr_request_latency_ms_count 1
+garbage line without value
+weird{label="a \\"quoted\\" }"} NaN
+"""
+
+
+class LiveMetricsTests(unittest.TestCase):
+    ENV = {'NVIDIA_OCR_URL': 'http://127.0.0.1:8000/v1/ocr'}
+
+    def setUp(self):
+        gpu._cache.clear()
+
+    def test_parser_handles_labels_quantiles_and_junk(self):
+        parsed = gpu.parse_prometheus(SAMPLE_METRICS)
+        self.assertEqual(parsed['ocr_requests_total'], [({}, 1.0)])
+        self.assertEqual(parsed['gpu_memory_total_bytes'][0][0]['name'], 'NVIDIA L4')
+        self.assertEqual(len(parsed['ocr_request_latency_ms']), 3)
+        self.assertEqual(parsed['weird'][0][0]['label'], 'a "quoted" }')
+        self.assertNotIn('garbage', parsed)
+        self.assertEqual(gpu.parse_prometheus(None), {})
+
+    def test_live_block_from_sample(self):
+        with patch.dict('os.environ', self.ENV, clear=True),                 patch.object(gpu, '_fetch_metrics', return_value=SAMPLE_METRICS) as fetch:
+            live, again = gpu.live(), gpu.live()
+        fetch.assert_called_once_with('http://127.0.0.1:8000/v1/metrics')
+        self.assertIs(live, again)  # cached
+        self.assertTrue(live['available'])
+        self.assertEqual(live['source'], 'NIM /v1/metrics')
+        self.assertEqual(live['gpu'], {'name': 'NVIDIA L4', 'memory_used_bytes': 2889875456, 'memory_total_bytes': 24152899584,
+                                       'utilization_ratio': 0.0, 'memory_utilization_ratio': 0.0, 'power_watts': 30.435,
+                                       'power_limit_watts': 72.0, 'temperature_c': 62.0, 'sm_clock_mhz': 2040.0,
+                                       'energy_joules': 190682.576})
+        self.assertEqual(live['ocr'], {'requests_total': 1, 'latency_ms': {'p50': 246.241, 'p95': 310.5, 'p99': 402.0}, 'count': 1})
+
+    def test_unavailable_paths_never_raise(self):
+        with patch.dict('os.environ', {}, clear=True):
+            self.assertFalse(gpu.live()['available'])
+        for url in ('http://example.com:8000/v1/ocr', 'http://8.8.8.8:8000/v1/ocr', 'file:///etc/passwd', 'http://0.0.0.0:8000/v1/ocr'):
+            self.assertIsNone(gpu.metrics_url(url), url)
+        self.assertEqual(gpu.metrics_url('http://10.0.0.5:8000/v1/ocr'), 'http://10.0.0.5:8000/v1/metrics')
+        self.assertEqual(gpu.metrics_url('http://localhost:8000/v1/ocr'), 'http://localhost:8000/v1/metrics')
+        with patch.dict('os.environ', {'NVIDIA_OCR_URL': 'http://example.com:8000/v1/ocr'}, clear=True),                 patch.object(gpu, '_fetch_metrics') as fetch:
+            self.assertFalse(gpu.live()['available'])
+        fetch.assert_not_called()
+        with patch.dict('os.environ', self.ENV, clear=True), patch.object(gpu, '_fetch_metrics', return_value='nothing here 1'):
+            self.assertEqual(gpu.live()['reason'], 'metrics endpoint returned no GPU or OCR series')
 
 
 if __name__ == '__main__':

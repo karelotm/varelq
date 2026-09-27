@@ -30,6 +30,7 @@ docker run -d --name varelq-app --restart unless-stopped --network host \
   -e NVIDIA_API_KEY -e PORT=8390 -e VARELQ_DB=/data/varelq.sqlite3 \
   -e NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/ocr -e 'NVIDIA_OCR_LABEL=NIM on Brev L4' -e NVIDIA_OCR_FALLBACK=hosted \
   -e LAB_RUN_BUDGET_S="${LAB_RUN_BUDGET_S:-150}" -e LAB_LLM_CONCURRENCY="${LAB_LLM_CONCURRENCY:-2}" \
+  -e NVIDIA_RPM_LIMIT="${NVIDIA_RPM_LIMIT:-40}" -e NIM_FALLBACK_MODEL="${NIM_FALLBACK_MODEL-nvidia/nemotron-3.5-lightning-30b-a3b}" \
   -e NIM_CONCURRENCY="${NIM_CONCURRENCY:-2}" \
   -e PYTHONUNBUFFERED=1 \
   -v "$APP_DIR:/app:ro" -v "$DATA_DIR:/data" -w /app "$IMAGE" \

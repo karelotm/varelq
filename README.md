@@ -58,6 +58,10 @@ Open http://127.0.0.1:8080/. `python run.py` does the same but asks for the key 
 | `NVIDIA_OCR_URL` | hosted `ai.api.nvidia.com` OCR | Set to a self-hosted NIM, for example `http://127.0.0.1:8000/v1/ocr` |
 | `NVIDIA_OCR_LABEL` | none | Label shown in the UI, for example `NIM on Brev L4` |
 | `NVIDIA_OCR_FALLBACK` | none | `hosted`: if the self-hosted OCR fails or times out, retry once on the hosted endpoint and mark the page `fallback_used` |
+| `NVIDIA_RPM_LIMIT` | `40` | Client-side requests-per-minute ceiling for the Build key; calls wait (at most `NVIDIA_RPM_MAX_WAIT_S`, default 20 s) instead of firing into HTTP 429. `0` disables |
+| `NIM_FALLBACK_MODEL` | `nvidia/nemotron-3.5-lightning-30b-a3b` | When the requested chat model exhausts its retries on 429/5xx/timeout (never on 400 or invalid JSON), the request is sent once to this model. Runs record the model that actually answered plus `requested_model`, `fallback_used`, `fallback_reason`. Empty disables |
+
+`GET /api/usage` reports process-wide NVIDIA usage (per model: requests, successes, failures, attempts, retries by status, tokens, p50/p95 latency; rolling 60 s count against `NVIDIA_RPM_LIMIT`; fallback counts), a summary of the last 20 OCR calls, and live GPU metrics. Live GPU metrics (`live` in `/api/gpu/status`, `gpu` in `/api/usage`) are read from the self-hosted NIM's `GET /v1/metrics` (Prometheus text, 2 s timeout, cached 5 s), only when `NVIDIA_OCR_URL` points at a loopback or private address; otherwise they report `{"available": false, "reason": ...}`.
 
 ### Self-hosted OCR on Brev (optional)
 

@@ -418,6 +418,9 @@ def _merge_usage(usage, meta):
             usage[k] += int(u.get(k) or 0)
         except (TypeError, ValueError):
             pass
+    if (meta or {}).get('fallback_used'):
+        usage['fallback_calls'] = usage.get('fallback_calls', 0) + 1
+        usage.setdefault('fallback_reason', (meta or {}).get('fallback_reason'))
     for status, n in ((meta or {}).get('retries_by_status') or {}).items():
         try:
             usage['retries_by_status'][str(status)] = usage['retries_by_status'].get(str(status), 0) + int(n)
@@ -454,7 +457,7 @@ def explain_groups(groups, chat, usage, budget_s=EXPLAIN_BUDGET_S):
         usage['timeouts'] += len(not_done)
         pool.shutdown(wait=False, cancel_futures=True)
 
-    model = None
+    used = []  # actual answering models (a fallback model is named, not hidden behind the requested one)
     with lock:
         snapshot = dict(results)
     for g in groups:
@@ -462,10 +465,14 @@ def explain_groups(groups, chat, usage, budget_s=EXPLAIN_BUDGET_S):
         explanation, fix = _clean_text(data.get('explanation')), _clean_text(data.get('fix'))
         if explanation:
             g['explanation'], g['explanation_source'] = explanation, 'model'
-            model = model or meta.get('model')
         if fix:
             g['fix'], g['fix_source'] = fix, 'model'
-            model = model or meta.get('model')
+        if (explanation or fix) and meta.get('model') and meta['model'] not in used:
+            used.append(meta['model'])
+        if (explanation or fix) and meta.get('fallback_used'):
+            g['explanation_model'] = meta.get('model')
+            g['fallback_used'] = True
+    model = ', '.join(used) or None
     if model is None and any(g['explanation_source'] == 'model' or g['fix_source'] == 'model' for g in groups):
         model = EXPLAIN_MODEL_FALLBACK
     return model
@@ -811,7 +818,7 @@ def analyze(dataset=DEFAULT_DATASET, explain=True, chat=None, embed=None, path=N
     t_rules = time.perf_counter()
 
     usage = {'calls': 0, 'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0,
-             'retries_by_status': {}, 'failures': 0, 'timeouts': 0, 'embed_calls': 0}
+             'retries_by_status': {}, 'failures': 0, 'timeouts': 0, 'embed_calls': 0, 'fallback_calls': 0}
     models = {'explain': None, 'embed': None}
     limitations = [
         'Rules encode the τ-retail policy; other domains need their own rule pack.',
@@ -832,6 +839,9 @@ def analyze(dataset=DEFAULT_DATASET, explain=True, chat=None, embed=None, path=N
             if any(g['explanation_source'] == 'template' for g in groups):
                 limitations.append('At least one model explanation failed; that group uses a template.')
             limitations.append('Model explanations are hypotheses; the flagged step is the evidence.')
+            if usage.get('fallback_calls'):
+                limitations.append(f"{usage['fallback_calls']} explanation call(s) used the fallback model after the "
+                                   'primary model was rate-limited or unavailable.')
         t_explain = time.perf_counter()
         embed = embed or _default_embed()
         if embed is not None:
