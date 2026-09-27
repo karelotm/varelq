@@ -219,7 +219,7 @@ export async function render(ctx) {
   }
   ctx.setCrumb(run.invoice_reference || id);
   if (run.status !== 'success' || run.kind !== 'documents') {
-    return `<div class="page-head"><div class="titles"><h1>Case <span class="mono">${esc(id)}</span></h1></div></div><div class="panel">${errorState(run.error || 'This analysis did not complete.', '<a class="btn btn-ghost btn-sm" href="#documents">Open documents</a>')}</div>`;
+    return `<div class="page-head"><div class="titles"><h1>Case unavailable</h1><div class="meta"><span class="truncate" title="${esc(id)}">Case ${esc(String(id).slice(0, 8))}</span></div></div></div><div class="panel">${errorState(run.error || 'This analysis did not complete.', '<a class="btn btn-ghost btn-sm" href="#documents">Open documents</a>')}</div>`;
   }
   const diffs = differences(run);
   const first = diffs[0] || null;
@@ -233,8 +233,8 @@ export async function render(ctx) {
   const head = `
 <div class="page-head sticky">
   <div class="titles">
-    <h1 class="break">${esc(run.supplier || 'Supplier unavailable')} <span class="subtle">·</span> <span class="mono">${esc(run.invoice_reference || '')}</span> <span class="subtle">·</span> <span class="tabular">${esc(money(run.invoice_total, run.currency))}</span></h1>
-    <div class="meta"><span id="decision-badge">${decisionBadge(decision)}</span><span>Created ${esc(relTime(run.created))}</span><span class="subtle">·</span><span class="mono">${esc(run.id)}</span>${run.stub ? tag('stub') : ''}</div>
+    <h1 title="${esc(run.supplier || '')}">${esc(run.supplier || 'Supplier unavailable')}</h1>
+    <div class="meta"><span id="decision-badge">${decisionBadge(decision)}</span>${run.invoice_reference ? `<span class="tabular">${esc(run.invoice_reference)}</span><span class="subtle">·</span>` : ''}<span class="tabular">${esc(money(run.invoice_total, run.currency))}</span><span class="subtle">·</span><span title="Case ${esc(run.id)}">Created ${esc(relTime(run.created))}</span>${run.stub ? tag('stub') : ''}</div>
   </div>
   <div class="actions">
     <button type="button" class="btn btn-secondary" data-action="decide" data-decision="needs_clarification"${decision === 'needs_clarification' ? ' aria-pressed="true"' : ''}>Request clarification</button>

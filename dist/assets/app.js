@@ -25,13 +25,15 @@ const LEGACY = {
 };
 const GROUP_LABEL = { reliability: 'Agent reliability', reconciliation: 'Reconciliation', settings: null };
 const NAV = [
-  { label: 'Agent reliability', items: [
-    { id: 'reliability', label: 'Findings', icon: 'shield-alert' },
-    { id: 'lab', label: 'Guard lab', icon: 'flask-conical' },
-  ] },
-  { label: 'Reconciliation', items: [
+  { label: 'Workspace', items: [
     { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
-    { id: 'documents', label: 'Documents', icon: 'file-up' },
+  ] },
+  { label: 'Records', items: [
+    { id: 'documents', label: 'Documents', icon: 'file-text' },
+  ] },
+  { label: 'Intelligence', items: [
+    { id: 'reliability', label: 'Agent reliability', icon: 'shield-alert' },
+    { id: 'lab', label: 'Guard lab', icon: 'flask-conical' },
   ] },
   { label: null, items: [{ id: 'settings', label: 'Settings', icon: 'settings' }] },
 ];
@@ -55,17 +57,25 @@ function gpu(force = false) {
 
 /* ---------- shell ---------- */
 function navHtml() {
-  return NAV.map((g) => `<div class="nav-group">${g.label ? `<div class="nav-label">${esc(g.label)}</div>` : ''}${g.items.map((it) => `<a class="nav-item" href="#${it.id}" data-nav="${it.id}">${icon(it.icon, 16)}<span>${esc(it.label)}</span></a>`).join('')}</div>`).join('');
+  return NAV.map((g) => `<div class="nav-group${g.label ? '' : ' nav-group-plain'}">${g.label ? `<div class="nav-label">${esc(g.label)}</div>` : ''}${g.items.map((it) => `<a class="nav-item" href="#${it.id}" data-nav="${it.id}">${icon(it.icon, 16)}<span>${esc(it.label)}</span></a>`).join('')}</div>`).join('');
 }
 
 function renderShell() {
   app.innerHTML = `
 <div class="shell">
   <aside class="sidebar" id="sidebar" aria-label="Primary">
-    <a class="brand" href="#reliability"><img src="assets/logo.svg" alt="" width="24" height="24"><span class="brand-name">VARELQ</span></a>
-    <div class="workspace">Local workspace</div>
+    <a class="brand" href="#overview" aria-label="VARELQ home"><span class="brand-mark" aria-hidden="true">v</span><span class="brand-name">varelq<span class="brand-dot">.</span></span></a>
+    <a class="org" href="#settings" title="Workspace settings">
+      <span class="org-avatar" aria-hidden="true">LW</span>
+      <span class="org-text"><strong>Local workspace</strong><small>Keys stay on the server</small></span>
+      ${icon('chevron-down', 14, 'org-chev')}
+    </a>
     <nav class="nav" aria-label="Sections">${navHtml()}</nav>
-    <div class="sidebar-foot">Keys stay on the server.</div>
+    <div class="operator">
+      <span class="operator-avatar" aria-hidden="true">L</span>
+      <span class="org-text"><strong>Local operator</strong><small>This machine</small></span>
+      <span class="dot dot-ok" id="operator-dot" title="Server reachable"></span>
+    </div>
   </aside>
   <div class="scrim" data-action="close-nav"></div>
   <div class="frame">
@@ -73,7 +83,7 @@ function renderShell() {
       <button type="button" class="btn btn-icon menu-btn" data-action="open-nav" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">${icon('menu', 20)}</button>
       <nav class="crumbs" aria-label="Breadcrumb" id="crumbs"></nav>
       <div class="topbar-right">
-        <div class="row gap-1" id="chips"></div>
+        <div class="status-line" id="chips"></div>
         <button type="button" class="btn btn-icon" data-action="theme" id="theme-btn"></button>
       </div>
       <div class="busy-bar" aria-hidden="true"></div>
@@ -116,8 +126,9 @@ function updateThemeButton() {
 }
 
 /* ---------- provenance chips ---------- */
+const DOT = { neutral: 'dot-ok', success: 'dot-ok', warning: 'dot-warn', danger: 'dot-bad' };
 function chip(text, tone, ic, title) {
-  return `<a class="chip-link" href="#settings" title="${esc(title)}"><span class="badge badge-${tone} chip">${icon(ic, 14)}<span>${esc(text)}</span></span></a>`;
+  return `<a class="status-item" href="#settings" title="${esc(title)}"><span class="dot ${DOT[tone] || ''}"></span><span>${esc(text)}</span></a>`;
 }
 async function refreshChips() {
   const parts = [];
@@ -134,6 +145,8 @@ async function refreshChips() {
   const ocr = ocrChip(h, g);
   if (ocr) parts.push(chip(ocr.text, ocr.tone, 'file-text', ocr.title));
   chipsEl.innerHTML = parts.join('');
+  const od = document.getElementById('operator-dot');
+  if (od) { od.className = `dot ${h ? 'dot-ok' : 'dot-bad'}`; od.title = h ? 'Server reachable' : 'Server offline'; }
 }
 function ocrChip(h, g) {
   const recent = g && Array.isArray(g.recent) && g.recent.length ? g.recent[0] : null; // newest first (ocr.recent_latencies)
@@ -177,9 +190,9 @@ export function navigate(hash) {
 function setCrumbs(route, title, detail) {
   const groupLabel = GROUP_LABEL[route.group];
   const parts = [];
-  if (groupLabel) parts.push(`<span class="crumb-parent">${esc(groupLabel)}</span><span class="crumb-sep">${icon('chevron-right', 14)}</span>`);
+  if (groupLabel) parts.push(`<span class="crumb-parent">${esc(groupLabel)}</span><span class="crumb-sep" aria-hidden="true">/</span>`);
   if (detail) {
-    parts.push(`<a href="#${route.nav}" class="crumb-parent">${esc(title)}</a><span class="crumb-sep">${icon('chevron-right', 14)}</span><span aria-current="page" class="truncate">${esc(detail)}</span>`);
+    parts.push(`<a href="#${route.nav}" class="crumb-parent">${esc(title)}</a><span class="crumb-sep" aria-hidden="true">/</span><span aria-current="page" class="truncate">${esc(detail)}</span>`);
   } else {
     parts.push(`<span aria-current="page" class="truncate">${esc(title)}</span>`);
   }

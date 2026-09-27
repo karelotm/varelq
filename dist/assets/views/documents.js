@@ -53,7 +53,7 @@ function samplesHtml(result) {
     const roles = Object.keys(s.files || {});
     const prov = s.synthetic ? tag('synthetic') : tag('public');
     const lic = s.license && !s.synthetic ? `<span class="subtle text-xs">${esc(s.license)}</span>` : '';
-    return `<div class="sample"><div class="row wrap"><h3 class="mono">${esc(s.title || s.id)}</h3>${prov}${result.value.stub ? tag('stub') : ''}</div>${s.description ? `<p class="muted text-sm">${esc(s.description)}</p>` : ''}<div class="sample-files">${roles.map((r) => `<span>${esc(humanize(r))} <span class="mono">${esc((s.files[r].path || '').split('/').pop())}</span></span>`).join('')}</div><div class="row">${lic}<span class="spacer"></span><button type="button" class="btn btn-secondary btn-sm" data-action="load-sample" data-sample="${esc(s.id)}">Load sample</button></div></div>`;
+    return `<div class="sample"><div class="row wrap"><h3>${esc(s.title || s.id)}</h3>${prov}${result.value.stub ? tag('stub') : ''}</div>${s.description ? `<p class="muted text-sm">${esc(s.description)}</p>` : ''}<div class="sample-files">${roles.map((r) => `<span>${esc(humanize(r))} <span class="mono">${esc((s.files[r].path || '').split('/').pop())}</span></span>`).join('')}</div><div class="row">${lic}<span class="spacer"></span><button type="button" class="btn btn-secondary btn-sm" data-action="load-sample" data-sample="${esc(s.id)}">Load</button></div></div>`;
   }).join('')}</div>`;
 }
 
@@ -66,7 +66,7 @@ export async function render(ctx) {
   const ready = !!chosen.files.invoice;
   return `
 <div class="page-head">
-  <div class="titles"><h1>Documents</h1><div class="meta">Three-way match: invoice against purchase order and receiving record. Every difference cites the document line it came from.</div></div>
+  <div class="titles"><h1>Documents</h1><div class="meta">Match an invoice against its purchase order and receiving record. Every difference cites its source line.</div></div>
 </div>
 ${panel({ title: 'Sample sets', flush: true, body: samplesHtml(samples) })}
 ${panel({ title: 'Files', id: 'files-panel', body: `<div class="dropzones" id="zones">${ROLES.map(zoneHtml).join('')}</div>`,

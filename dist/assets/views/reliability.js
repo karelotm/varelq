@@ -71,8 +71,8 @@ function errorRow(text, action) {
   return `<div class="rl-error" role="alert">${svgIcon('alert-triangle', 16)}<span>${esc(text)}</span>${action ? `<button type="button" class="rl-btn rl-btn--ghost" data-action="${esc(action)}">Retry</button>` : ''}</div>`;
 }
 
-function header(title, chips, actions) {
-  return `<header class="rl-head"><div class="rl-head-title"><h1>${esc(title)}</h1>${chips}</div><div class="rl-head-actions">${actions}</div></header>`;
+function header(title, chips, actions, desc = '') {
+  return `<header class="rl-head"><div class="rl-head-text"><div class="rl-head-title"><h1>${esc(title)}</h1>${chips}</div>${desc ? `<p class="rl-head-meta">${esc(desc)}</p>` : ''}</div><div class="rl-head-actions">${actions}</div></header>`;
 }
 
 function evalStrip(r) {
@@ -97,7 +97,7 @@ function evalStrip(r) {
   if (r.created) meta.push(`Run ${esc(relTime(r.created))}`);
   return `<section class="rl-strip" aria-label="Evaluation">
     <div class="rl-strip-main">${parts.join('<span class="rl-sep" aria-hidden="true">·</span>')}</div>
-    <div class="rl-strip-meta">${e.reference ? tag('deterministic', 'Held-out reference') : ''}<span class="rl-muted">${meta.join(' · ')}</span><span class="rl-mono rl-muted">${esc(r.id || '')}</span></div>
+    <div class="rl-strip-meta">${e.reference ? tag('deterministic', 'Held-out reference') : ''}<span class="rl-muted"${r.id ? ` title="Report ${esc(r.id)}"` : ''}>${meta.join(' · ')}</span></div>
   </section>`;
 }
 
@@ -110,12 +110,12 @@ function groupsTable(groups, selectedId) {
       <td>${g.detector === 'rule' ? tag('rule') : badge(humanize(g.detector), 'neutral')}</td>
       <td class="rl-num">${num(g.runs_affected)}</td>
       <td class="rl-num">${num(g.occurrences)}</td>
-      <td class="rl-mono rl-formula">${esc(priorityText(g))}</td>
+      <td class="rl-num rl-formula" title="${esc(priorityText(g))}">${g.priority_score !== undefined ? num(g.priority_score) : esc(priorityText(g))}</td>
     </tr>`;
   }).join('');
   return `<div class="rl-table-wrap"><table class="rl-table">
     <caption class="rl-sr">Failure patterns ranked by priority</caption>
-    <thead><tr><th scope="col">Severity</th><th scope="col">Pattern</th><th scope="col">Detector</th><th scope="col" class="rl-num">Runs</th><th scope="col" class="rl-num">Occurrences</th><th scope="col">Priority</th></tr></thead>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Pattern</th><th scope="col">Detector</th><th scope="col" class="rl-num">Runs</th><th scope="col" class="rl-num">Occurrences</th><th scope="col" class="rl-num">Priority</th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
@@ -155,9 +155,9 @@ function detailPanel(g, report) {
   const hl = g.hand_labels; // optional, additive: {labelled, true_violations}
   return `<aside class="rl-side" aria-label="Pattern detail">
     <div class="rl-panel">
-      <div class="rl-panel-head"><h2><span class="rl-mono">${esc(g.group_id)}</span> · ${esc(g.title || humanize(g.pattern_id))}</h2>
+      <div class="rl-panel-head"><h2><span class="rl-label rl-h2-id">${esc(g.group_id)}</span>${esc(g.title || humanize(g.pattern_id))}</h2>
         <div class="rl-tags">${badge(g.severity, sevTone(g.severity))}${g.detector === 'rule' ? tag('rule') : ''}</div></div>
-      <div class="rl-kv"><span class="rl-label">Priority</span><span class="rl-mono rl-formula-lg">${esc(priorityText(g))}</span></div>
+      <div class="rl-kv"><span class="rl-label">Priority</span><span class="rl-formula-lg">${esc(priorityText(g))}</span></div>
       <div class="rl-kv"><span class="rl-label">Affected</span><span>${plural(g.runs_affected, 'run', 'runs')} · ${plural(g.occurrences, 'occurrence', 'occurrences')}</span></div>
       ${hl && hl.labelled ? `<div class="rl-kv"><span class="rl-label">Hand-labelled precision</span><span class="rl-mono">${num(hl.true_violations)}/${num(hl.labelled)}</span></div>` : ''}
       ${g.rule_definition ? `<div class="rl-section"><div class="rl-section-head"><span class="rl-label">Rule</span>${tag('deterministic')}</div><p>${esc(g.rule_definition)}</p></div>` : ''}
@@ -241,11 +241,13 @@ function findingsHtml() {
   const ds = datasetInfo();
   const prov = (r && r.provenance && r.provenance.url ? r.provenance : null) || (ds && ds.provenance) || (r && r.provenance);
   const stub = (r && r.stub) || (S.datasets && S.datasets.stub);
-  const chips = `${provChip(prov)}${r ? tag('recorded') : ''}${stub ? tag('stub') : ''}`;
+  const chips = `${r ? tag('recorded') : ''}${stub ? tag('stub') : ''}`;
   const action = r
     ? btn('Re-run analysis', { action: 'analyze', busy: S.busy, icon: 'rotate-ccw' })
     : btn('Run analysis', { action: 'analyze', primary: true, busy: S.busy, icon: 'play' });
-  const head = header('Findings', chips, action);
+  const desc = r ? `Failure patterns in ${plural(r.run_count, 'recorded τ-bench run', 'recorded τ-bench runs')}.` : 'Failure patterns in recorded τ-bench runs.';
+  const head = header('Findings', r ? chips : `${provChip(prov)}${chips}`, action, desc);
+  const runDetails = `<details class="rl-details rl-run-details"><summary>${svgIcon('chevron-right', 14)}Run details</summary><div class="rl-run-details-body">${provChip(prov) ? `<div class="rl-tags">${provChip(prov)}</div>` : ''}${r ? evalStrip(r) : ''}</div></details>`;
   const busyLine = S.busy ? `<div class="rl-busy" role="status" aria-live="polite"><div class="rl-indeterminate" aria-hidden="true"></div><span>Running rules over ${ds ? plural(ds.runs, 'recorded run', 'recorded runs') : 'the recorded runs'} and asking Nemotron to explain each group…</span></div>` : '<div class="rl-busy" role="status" aria-live="polite"></div>';
   const runErr = S.runError ? errorRow(S.runError, 'analyze') : '';
   if (S.reportError && !r) return `${head}${busyLine}${errorRow(S.reportError, 'reload')}`;
@@ -253,10 +255,11 @@ function findingsHtml() {
   const groups = sortGroups(r.groups);
   if (!S.selected || !groups.some(g => g.group_id === S.selected)) S.selected = groups[0] ? groups[0].group_id : null;
   const g = groups.find(x => x.group_id === S.selected);
-  return `${head}${busyLine}${runErr}${evalStrip(r)}
+  return `${head}${busyLine}${runErr}
     <div class="rl-split">
       <section class="rl-main" aria-label="Failure patterns">
         <div class="rl-panel rl-panel--flush">${groups.length ? groupsTable(groups, S.selected) : emptyState('No failure patterns were flagged in this run.')}${tableFoot(r)}</div>
+        ${runDetails}
         ${replayPanel(r)}
         ${limitationsBlock(r.limitations)}
         ${rawBlock('report')}
@@ -346,9 +349,9 @@ function traceHtml() {
   const t = S.trace;
   const steps = sortSteps(t.steps);
   const chips = `${provChip(t.provenance)}${tag('recorded')}${t.stub ? tag('stub') : ''}`;
-  const nav = S.flags.length ? `<div class="rl-flag-nav">
-      ${btn('Previous flag', { action: 'prev-flag', disabled: S.flags.length < 2, icon: 'chevron-up' })}
-      ${btn('Next flag', { action: 'next-flag', primary: true, disabled: S.flags.length < 2, icon: 'chevron-down' })}</div>` : '';
+  const nav = S.flags.length > 1 ? `<div class="rl-flag-nav">
+      ${btn('Previous flag', { action: 'prev-flag', icon: 'chevron-up' })}
+      ${btn('Next flag', { action: 'next-flag', icon: 'chevron-down' })}</div>` : '';
   return `${crumbs}${header(`Trace ${id}`, chips, nav)}
     <div class="rl-strip"><div class="rl-strip-main"><span><strong>${num(steps.length)}</strong> steps</span><span class="rl-sep" aria-hidden="true">·</span><span><strong>${num(S.flags.length)}</strong> ${S.flags.length === 1 ? 'flag' : 'flags'}</span>${t.dataset ? `<span class="rl-sep" aria-hidden="true">·</span><span class="rl-mono rl-muted">${esc(t.dataset)}</span>` : ''}</div></div>
     <div class="rl-split">
