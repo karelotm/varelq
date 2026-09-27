@@ -93,7 +93,7 @@ The seeded report confirms the planning pre-check: R1 fires in 12 runs (22 occur
 - IBM Plex Sans and Plex Mono, self-hosted woff2, SIL Open Font Licence (`dist/assets/fonts/OFL.txt`).
 - Lucide icon paths, ISC licence.
 - The VARELQ logo (`dist/assets/logo.svg`) was made in the pre-event baseline.
-- No generated images, voices or stock media. TODO: update if the video uses generated voice-over or music.
+- Demo video: narration is a generated voice (edge-tts, Microsoft neural voice en-US-AndrewNeural) reading our own script (VOICEOVER.md); the screen recording is an automated Playwright walkthrough of the live app (scripts/video/). No generated images, music or stock media.
 
 ### Stack and access constraints
 
