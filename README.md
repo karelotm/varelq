@@ -6,7 +6,9 @@ Built for the GOMYCODE × NVIDIA "Come Build with AI" hackathon, 27 September 20
 
 > This is a local, single-user prototype with no authentication. The server binds to `127.0.0.1` only. Do not expose it publicly.
 >
-> The public demo for judges runs on a Brev L4 behind an access-code gate with rate limits (`deploy/gate.py`) and a Cloudflare quick tunnel; see [deploy/HOSTING.md](deploy/HOSTING.md). The URL and access code are shared in the submission form, not in this repo.
+> The public demo for judges runs on a Brev L4 behind an access-code gate with rate limits (`deploy/gate.py`) and a Cloudflare quick tunnel; see [deploy/HOSTING.md](deploy/HOSTING.md). The live demo link and its access code are below.
+>
+> **Jury access to the live demo:** https://grade-gods-font-checks.trycloudflare.com. Access code: `varelq-e665f873`. It is a shared demo gate with rate limits, not a personal password. A guided tour starts on first visit; the key screens are Agent reliability and Guard lab.
 
 ## What it does
 
