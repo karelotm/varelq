@@ -229,11 +229,11 @@ function fieldRows(run) {
         cell.forEach((item, i) => {
           for (const [k, c] of Object.entries(item || {})) {
             if (!c || typeof c !== 'object' || !('value' in c)) continue;
-            rows.push({ role, field: `Line ${i + 1} · ${humanize(k)}`, cell: c, boxes: boxesFor(role) });
+            rows.push({ role, path: `items[${i}].${k}`, field: `Line ${i + 1} · ${humanize(k)}`, cell: c, boxes: boxesFor(role) });
           }
         });
       } else if (cell && typeof cell === 'object' && 'value' in cell) {
-        rows.push({ role, field: humanize(name), cell, boxes: boxesFor(role) });
+        rows.push({ role, path: name, field: humanize(name), cell, boxes: boxesFor(role) });
       }
     }
   }
@@ -247,7 +247,7 @@ function fieldsTable(run) {
     columns: [
       { key: 'role', label: 'Document', render: (r) => esc(ROLE_TAB[r.role] || humanize(r.role)) },
       { key: 'field', label: 'Field', render: (r) => esc(r.field) },
-      { key: 'value', label: 'Value', render: (r) => (r.cell.value === null || r.cell.value === undefined ? `<span class="subtle">Not found</span>` : `<span class="mono break">${esc(r.cell.value)}</span>${ocrReviewLevel(r.score) === 'verify' ? ` ${ocrReviewPill(r.score)}` : ''}`) },
+      { key: 'value', label: 'Value', render: (r) => valueWithCorrect(r) },
       { key: 'line', label: 'Source line', render: (r) => {
         const ev = (r.cell.evidence || [])[0];
         return ev ? `<button type="button" class="btn btn-ghost btn-sm mono" data-action="show-line" data-role="${esc(ev.document || r.role)}" data-loc="${esc(ev.location)}">${esc(ev.location)}</button>` : `<span class="subtle">${EMPTY}</span>`;
@@ -260,6 +260,48 @@ function fieldsTable(run) {
     rows,
     empty: 'No fields were extracted.',
   });
+}
+
+/* ---------- reviewer corrections ---------- */
+function clock(iso) {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function shown(v) { return v === null || v === undefined || v === '' ? 'nothing' : String(v); }
+function correctedTag(cell) {
+  if (!cell || cell.provenance !== 'corrected by reviewer') return '';
+  const c = cell.correction || {};
+  const title = `Model read ${shown(cell.model_value)} · corrected by ${c.by || 'Local operator'}${c.at ? ` at ${clock(c.at)}` : ''}${c.note ? `: ${c.note}` : ''}`;
+  return badge('Corrected', 'accent', { title, className: 'tag tag-corrected' });
+}
+function valueWithCorrect(r) {
+  const v = r.cell.value;
+  const text = v === null || v === undefined ? '<span class="subtle">Not found</span>' : `<span class="mono break">${esc(v)}</span>`;
+  const verify = v !== null && v !== undefined && ocrReviewLevel(r.score) === 'verify' ? ` ${ocrReviewPill(r.score)}` : '';
+  const fixed = correctedTag(r.cell);
+  const btn = r.path ? `<button type="button" class="btn btn-ghost btn-sm fix-btn" data-action="correct" data-role="${esc(r.role)}" data-field="${esc(r.path)}" title="Correct this value" aria-label="Correct ${esc(r.field)}">${icon('pencil', 14)}</button>` : '';
+  return `<div class="fix-cell" data-fix-role="${esc(r.role)}" data-fix-field="${esc(r.path || '')}"><span class="fix-value">${text}${verify}${fixed ? ` ${fixed}` : ''}</span>${btn}</div>`;
+}
+function editorHtml(role, path, cell) {
+  const v = cell && cell.value !== null && cell.value !== undefined ? String(cell.value) : '';
+  return `<form class="fix-editor" data-role="${esc(role)}" data-field="${esc(path)}"><input class="input mono" name="value" value="${esc(v)}" aria-label="Corrected value" autocomplete="off" maxlength="300"><input class="input" name="note" placeholder="Note (optional)" aria-label="Correction note" maxlength="300"><div class="fix-actions"><button type="submit" class="btn btn-primary btn-sm">Save</button><button type="button" class="btn btn-ghost btn-sm" data-action="correct-cancel">Cancel</button></div></form>`;
+}
+function fieldLabel(path) {
+  const m = /^items\[(\d+)\]\.(.+)$/.exec(path);
+  return m ? `Line ${Number(m[1]) + 1} · ${humanize(m[2])}` : humanize(path);
+}
+function correctionsList(run) {
+  const list = Array.isArray(run.corrections) ? run.corrections : [];
+  if (!list.length) return '';
+  const rows = list.slice().reverse().map((c) => {
+    const active = !c.reverted_at;
+    const undo = active
+      ? `<button type="button" class="btn btn-ghost btn-sm" data-action="correct-undo" data-role="${esc(c.role)}" data-field="${esc(c.field)}">${icon('rotate-ccw', 14)}<span class="btn-label">Undo</span></button>`
+      : `<span class="text-xs muted nowrap">${c.superseded ? 'Superseded' : 'Undone'}</span>`;
+    return `<li>${icon('pencil', 16, active ? '' : 'subtle')}<div class="stack gap-1"><span>${esc(ROLE_TAB[c.role] || humanize(c.role))} · ${esc(fieldLabel(c.field))}: <span class="mono">${esc(shown(c.original))}</span> → <span class="mono weight-500">${esc(shown(c.value))}</span></span><span class="detail">${esc(c.by || 'Local operator')} · ${esc(clock(c.at))}${c.note ? ` · ${esc(c.note)}` : ''}</span></div>${undo}</li>`;
+  }).join('');
+  const active = list.filter((c) => !c.reverted_at).length;
+  return `<div class="sub-head bordered">Corrections (${esc(num(active))})</div><p class="text-xs muted ocr-legend">Checks were re-run on corrected values without a model call. The model reading is kept for audit.</p><ul class="check-list">${rows}</ul>`;
 }
 
 /* ---------- render ---------- */
@@ -313,7 +355,7 @@ export async function render(ctx) {
   <div role="tabpanel" id="case-tabs-panel" aria-labelledby="case-tabs-tab-${detailTab}">
   ${pane('differences', `<div id="diff-table">${differencesTable(run, state.key)}</div>`)}
   ${pane('documents', `<div class="sub-head">Extracted fields</div>${fieldsTable(run)}`)}
-  ${pane('evidence', `<div class="sub-head">All checks</div><p class="text-xs muted ocr-legend">${esc(OCR_LEGEND)}</p>${checksList(run)}${limCount ? `<div class="sub-head bordered">Not checked</div>${limitationsList(run)}` : ''}`)}
+  ${pane('evidence', `<div class="sub-head">All checks</div><p class="text-xs muted ocr-legend">${esc(OCR_LEGEND)}</p>${checksList(run)}${correctionsList(run)}${limCount ? `<div class="sub-head bordered">Not checked</div>${limitationsList(run)}` : ''}`)}
   </div>
 </section>`;
 
@@ -395,6 +437,45 @@ export function mount(root, ctx) {
     }
   }
 
+  function cellFor(role, path) {
+    const doc = (run.fields || {})[role] || {};
+    const m = /^items\[(\d+)\]\.(.+)$/.exec(path);
+    return m ? ((doc.items || [])[Number(m[1])] || {})[m[2]] : doc[path];
+  }
+  function openEditor(role, path) {
+    root.querySelectorAll('.fix-editor').forEach(closeEditor);
+    const host = [...root.querySelectorAll('.fix-cell')].find((el) => el.dataset.fixRole === role && el.dataset.fixField === path);
+    if (!host) return;
+    host.dataset.prev = host.innerHTML;
+    host.innerHTML = editorHtml(role, path, cellFor(role, path));
+    const input = host.querySelector('input[name="value"]');
+    input.focus(); input.select();
+  }
+  function closeEditor(form) {
+    const host = form && form.closest('.fix-cell');
+    if (!host || host.dataset.prev === undefined) return;
+    host.innerHTML = host.dataset.prev; delete host.dataset.prev;
+    host.querySelector('[data-action="correct"]')?.focus();
+  }
+  async function submitCorrection(btn, body, message) {
+    if (btn) setBusy(btn, true);
+    try {
+      await ctx.api.post(`/api/runs/${encodeURIComponent(run.id)}/corrections`, body);
+      ctx.toast(message, 'success');
+      ctx.refresh();
+    } catch (e) {
+      if (btn) setBusy(btn, false);
+      ctx.toast(e.message, 'danger');
+    }
+  }
+  const onSubmit = (e) => {
+    const form = e.target.closest && e.target.closest('.fix-editor');
+    if (!form) return;
+    e.preventDefault();
+    const value = form.elements.value.value.trim();
+    submitCorrection(form.querySelector('[type="submit"]'), { role: form.dataset.role, field: form.dataset.field, value: value === '' ? null : value, note: form.elements.note.value.trim() }, 'Value corrected. Checks re-run.');
+  };
+
   function showDetail(id) {
     if (!DETAIL_TABS.includes(id)) return;
     detailTab = id;
@@ -420,6 +501,9 @@ export function mount(root, ctx) {
       if (act.dataset.action === 'decide') { decide(act); return; }
       if (act.dataset.action === 'retry') { ctx.refresh(); return; }
       if (act.dataset.action === 'show-line') { showLine(act.dataset.role, act.dataset.loc); return; }
+      if (act.dataset.action === 'correct') { openEditor(act.dataset.role, act.dataset.field); return; }
+      if (act.dataset.action === 'correct-cancel') { closeEditor(act.closest('.fix-editor')); return; }
+      if (act.dataset.action === 'correct-undo') { submitCorrection(act, { role: act.dataset.role, field: act.dataset.field, revert: true }, 'Correction undone. Checks re-run.'); return; }
     }
     const tab = e.target.closest('.tab[data-role]');
     if (tab) {
@@ -437,6 +521,8 @@ export function mount(root, ctx) {
     if (tr) selectCheck(tr.dataset.key);
   };
   const onKey = (e) => {
+    const fe = e.target.closest && e.target.closest('.fix-editor');
+    if (fe) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeEditor(fe); } return; }
     const dt = !unbindTabs && e.target.closest && e.target.closest('.case-detail [role="tab"][data-tab]');
     if (dt && ['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) {
       e.preventDefault();
@@ -466,10 +552,12 @@ export function mount(root, ctx) {
   };
   root.addEventListener('click', onClick);
   root.addEventListener('keydown', onKey);
+  root.addEventListener('submit', onSubmit);
   scrollToSelected();
   return () => {
     root.removeEventListener('click', onClick);
     root.removeEventListener('keydown', onKey);
+    root.removeEventListener('submit', onSubmit);
     if (unbindTabs) { try { unbindTabs(); } catch { /* ignore */ } }
     delete ctx.caseState;
   };

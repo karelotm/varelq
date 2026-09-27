@@ -73,3 +73,13 @@
   .pages-cell-name { max-width: 160px; }
 }
 .pages-error.is-soft { color: var(--text-2); }
+
+/* Case: reviewer corrections */
+.fix-cell { display: flex; align-items: center; gap: var(--s1); min-width: 0; }
+.fix-value { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s1); min-width: 0; }
+.fix-btn { color: var(--text-3); padding-left: var(--s1); padding-right: var(--s1); opacity: .55; }
+tr:hover .fix-btn, .fix-btn:focus-visible { opacity: 1; color: var(--text-2); }
+.fix-editor { display: flex; flex-direction: column; gap: var(--s1); width: 100%; min-width: 180px; }
+.fix-editor .input { width: 100%; }
+.fix-actions { display: flex; gap: var(--s1); }
+@media (hover: none) { .fix-btn { opacity: 1; } }

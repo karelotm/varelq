@@ -396,3 +396,96 @@ def analyze(files, infer, sample_id=None):
             'findings': findings, 'checks': result['checks'], 'limitations': limitations,
             'recommendation': 'Clarify differences and incomplete checks before a payment decision.' if findings or limitations else 'Review originals before recording your decision.',
             'decision': 'pending'}
+
+
+# ---------------------------------------------------------------- reviewer corrections (no model call)
+
+FIELD_ALIASES = {'tax': 'vat', 'tax_rate': 'vat_rate', 'invoice_reference': 'reference'}
+_ITEM_PATH = re.compile(r'^items\[(\d{1,4})\]\.([a-z_]{1,32})$')
+CORRECTION_BY = 'Local operator'
+
+
+def _locate(fields, role, field):
+    """Canonical field path and its cell in fields[role], or raise ValueError."""
+    doc = fields.get(role) if isinstance(fields, dict) else None
+    if not isinstance(doc, dict):
+        raise ValueError(f'This investigation has no {role} document.')
+    if not isinstance(field, str) or not field.strip():
+        raise ValueError('Field is required.')
+    field = field.strip()
+    m = _ITEM_PATH.match(field)
+    if m:
+        idx, key = int(m.group(1)), m.group(2)
+        items = doc.get('items') if isinstance(doc.get('items'), list) else []
+        if idx >= len(items) or not isinstance(items[idx], dict) or not isinstance(items[idx].get(key), dict):
+            raise ValueError(f'Unknown field {field} for {role}.')
+        return f'items[{idx}].{key}', key, items[idx][key]
+    key = FIELD_ALIASES.get(field, field)
+    if key == 'items' or not isinstance(doc.get(key), dict):
+        raise ValueError(f'Unknown field {field} for {role}.')
+    return key, key, doc[key]
+
+
+def validate_correction(fields, role, field, value, note):
+    if role not in ROLES:
+        raise ValueError('Role must be invoice, purchase_order or receiving_record.')
+    path, key, _ = _locate(fields, role, field)
+    if note is None:
+        note = ''
+    if not isinstance(note, str) or len(note) > 300:
+        raise ValueError('Note must be text of at most 300 characters.')
+    if value is not None and (isinstance(value, bool) or not isinstance(value, (str, int, float))):
+        raise ValueError('Value must be a string, a number or null.')
+    if isinstance(value, str):
+        value = value.strip()
+        if len(value) > 300:
+            raise ValueError('Value must be at most 300 characters.')
+        if value == '':
+            value = None
+    if key in NUMERIC_FIELDS and value is not None:
+        n = numeric(value)
+        if n is None:
+            raise ValueError(f'{field} must be a finite decimal number.')
+        value = format(n, 'f')
+    return path, value, note.strip()
+
+
+def apply_corrections(original_fields, corrections):
+    """Deep copy of fields with active corrections applied; corrected cells keep their evidence."""
+    fields = json.loads(json.dumps(original_fields))
+    for corr in corrections:
+        if corr.get('reverted_at'):
+            continue
+        _, _, cell = _locate(fields, corr['role'], corr['field'])
+        cell.setdefault('model_value', cell.get('value'))
+        cell['value'] = corr['value']
+        cell['provenance'] = 'corrected by reviewer'
+        cell['correction'] = {k: corr.get(k) for k in ('id', 'note', 'by', 'at')}
+    return fields
+
+
+def recompute(run):
+    """Re-run the deterministic checks over the reviewer-corrected fields. Never calls a model."""
+    original = run.setdefault('original_fields', json.loads(json.dumps(run['fields'])))
+    if 'original_checks' not in run:
+        run['original_checks'] = run.get('checks', [])
+        run['original_findings'] = run.get('findings', [])
+        run['original_limitations'] = run.get('limitations', [])
+        run['original_invoice_total'] = run.get('invoice_total')
+        run['original_supplier'] = run.get('supplier')
+        run['original_invoice_reference'] = run.get('invoice_reference')
+    base_gaps = set(reconcile(original)['limitations'])
+    extraction_gaps = [g for g in run['original_limitations'] if g not in base_gaps]
+    fields = apply_corrections(original, run.get('corrections', []))
+    result = reconcile(fields)
+    run['fields'] = fields
+    run['checks'], run['findings'] = result['checks'], result['findings']
+    run['limitations'] = list(dict.fromkeys(extraction_gaps + result['limitations']))
+    inv = fields.get('invoice') or {}
+    total = numeric((inv.get('total') or {}).get('value'))
+    run['invoice_total'] = _fmt(total, 'money') if total is not None else None
+    run['supplier'] = (inv.get('supplier') or {}).get('value') or 'Supplier unavailable'
+    run['invoice_reference'] = (inv.get('reference') or {}).get('value') or 'Reference unavailable'
+    if run.get('recommendation'):
+        run['recommendation'] = 'Clarify differences and incomplete checks before a payment decision.' if run['findings'] or run['limitations'] else 'Review originals before recording your decision.'
+    return run

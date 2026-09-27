@@ -497,6 +497,15 @@ class Handler(BaseHTTPRequestHandler):
                 return 200, storage.decide(payload.get('id'), payload.get('decision'))
             except ValueError as exc:
                 raise HttpError(400, str(exc))
+        if len(parts) == 3 and parts[0] == 'runs' and parts[2] == 'corrections':
+            run_id = seg_id(parts[1])
+            payload = self.read_json_dict()
+            try:
+                return 200, storage.correct(run_id, payload)
+            except LookupError:
+                raise HttpError(404, 'Run not found')
+            except ValueError as exc:
+                raise HttpError(400, str(exc)[:300])
         if parts == ['agent-failures']:
             payload = self.read_json_dict()
             rows = payload.get('logs')
