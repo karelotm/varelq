@@ -30,7 +30,7 @@ class Checks(unittest.TestCase):
         rec=copy.deepcopy(po);rec['reference']=c('R-1')
         return {'invoice':inv,'purchase_order':po,'receiving_record':rec}
     def analyze(self,fields):
-        files={k:(k+'.txt',b'I-1 P-1 R-1 EUR Supplier SKU-1 Part 2 10 20 4 24 0.2') for k in fields}
+        files={k:(k+'.txt',b'I-1 P-1 R-1 EUR Supplier SKU-1 Part 2 10 20 4 24 0.2 12') for k in fields}
         return documents.analyze(files,lambda *_:fields)
     def test_multiline_arithmetic_and_currency(self):
         f=self.extraction();f['invoice']['items'][0]['unit_price']=self.cell(12)

@@ -22,16 +22,39 @@ def connection():
         db.close()
 
 
+def now_iso():
+    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+
 def save(kind, status, payload):
-    run = dict(payload, id=uuid4().hex, created=datetime.now(timezone.utc).isoformat(), kind=kind, status=status)
+    run = dict(payload, id=uuid4().hex, created=now_iso(), kind=kind, status=status)
     with connection() as db:
         db.execute('INSERT INTO runs VALUES (?,?,?,?,?)', (run['id'], run['created'], kind, status, json.dumps(run, allow_nan=False)))
     return run
 
 
-def list_runs():
+def list_runs(limit=100):
     with connection() as db:
-        return [json.loads(row[0]) for row in db.execute('SELECT payload FROM runs ORDER BY created DESC LIMIT 100')]
+        return [json.loads(row[0]) for row in db.execute('SELECT payload FROM runs ORDER BY created DESC LIMIT ?', (int(limit),))]
+
+
+def get_run(run_id):
+    if not isinstance(run_id, str):
+        return None
+    with connection() as db:
+        row = db.execute('SELECT payload FROM runs WHERE id=?', (run_id,)).fetchone()
+    return json.loads(row[0]) if row else None
+
+
+def latest_reliability(dataset, schema=2):
+    """Newest successful reliability report of the given schema for a dataset, or None."""
+    with connection() as db:
+        rows = db.execute("SELECT payload FROM runs WHERE kind='reliability' AND status='success' ORDER BY created DESC")
+        for (payload,) in rows:
+            run = json.loads(payload)
+            if run.get('schema') == schema and run.get('dataset') == dataset:
+                return run
+    return None
 
 
 def decide(run_id, decision):
@@ -45,6 +68,6 @@ def decide(run_id, decision):
         if run['kind'] != 'documents' or run['status'] != 'success':
             raise ValueError('Only completed investigations can be reviewed.')
         run['decision'] = decision
-        run.setdefault('decisions', []).append({'decision': decision, 'at': datetime.now(timezone.utc).isoformat(), 'reviewer': 'Local operator'})
+        run.setdefault('decisions', []).append({'decision': decision, 'at': now_iso(), 'reviewer': 'Local operator'})
         db.execute('UPDATE runs SET payload=? WHERE id=?', (json.dumps(run), run_id))
     return run

@@ -1,0 +1,13 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-7782
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Atlas Industrial Supply (fictional)
+Order date: 2026-09-10
+Currency: TND
+SKU | Description | Quantity | Unit price | Line total
+SKU-3 | Pipe clamp 25mm | 120 | 3.20 | 384.00
+SKU-4 | Wall anchor 8mm | 400 | 0.15 | 60.00
+Net: 444.00 TND
+VAT rate: 19%
+VAT: 84.36 TND
+Total: 528.36 TND

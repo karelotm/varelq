@@ -1,29 +1,59 @@
-# Dedicated GPU OCR
+# Self-hosted OCR on Brev (NVIDIA nemotron-ocr-v2 NIM)
 
-The application already uses NVIDIA hosted GPU OCR by default. A dedicated VM is optional and has not been deployed.
+State on 27 Sep 2026: Brev instance `varelq-ocr` (GCP g2-standard-8, NVIDIA L4 24 GB, about $1.08/h).
+`start-ocr.sh` was run at about 12:43 machine time (UTC); the container `varelq-ocr`
+(`nvcr.io/nim/nvidia/nemotron-ocr-v2:2.0`) is bound to **VM 127.0.0.1:8000** and `/v1/health/ready`
+returned 200 on the VM. The Build API key was accepted for the registry login and image pull.
+Not yet verified: an inference request against the NIM and the host tunnel (both left to the lead).
 
-Prepared Brev configuration: GCP L4 24GB, 8 CPU, 32GiB RAM, 256GiB disk. Console quote on 2026-09-27: $1.02/hour compute + $0.05/hour storage. Confirm current price before deployment. Stopped instances still incur storage charges. Deployment also requires acceptance of the console's GCP data-sharing terms.
+## Files
 
-On a provisioned Linux VM with NVIDIA Container Toolkit and Docker, run `bash start-ocr.sh`. The hidden prompt needs an NGC personal API key with Catalog access; Build API access alone does not verify container registry entitlement. The container must be licensed for your intended use. The script pins NVIDIA OCR v2 image version 2.0 and exposes it only on VM localhost. Docker administrators can inspect container environment credentials; remove the container after testing.
+| File | Runs on | Purpose |
+|---|---|---|
+| `start-ocr.sh` | VM | Pulls and starts the OCR NIM on VM loopback; key via stdin |
+| `capture-gpu.sh` | VM | One `nvidia-smi` capture as JSON for `deploy/gpu-capture.json` |
+| `start-app.sh` | VM | Runs the whole app + access-code gate next to the NIM (see `HOSTING.md`) |
+| `gate.py` | VM | Access code + rate limit reverse proxy (stdlib) |
+| `HOSTING.md` | — | Prepared public-demo procedure; publishing needs user approval |
 
-Use the SSH host/alias supplied by Brev to forward local port 8000:
+## Deploy the NIM (key on stdin only)
 
-```powershell
-ssh -N -L 8000:127.0.0.1:8000 <Brev-SSH-host>
+```bash
+KEYFILE='C:\Users\PC\AppData\Local\Temp\claude\C--dev-Valerq\3df3c8a4-3640-449e-adfc-3b84c95ca57c\scratchpad\nvidia.key'
+{ printf 'export NGC_API_KEY=%q\n' "$(tr -d '\r\n' < "$KEYFILE")"; cat deploy/start-ocr.sh; } \
+  | docker exec -i varelq-brev-client ssh varelq-ocr 'bash -s'
 ```
 
-In a separate PowerShell terminal, from the application folder:
+## Tunnel to Windows (loopback only)
 
-```powershell
-$env:NVIDIA_OCR_URL = 'http://127.0.0.1:8000/v1/ocr'
-$env:PORT = '8081'
-python run.py
+```bash
+docker exec -d varelq-brev-client ssh -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 0.0.0.0:8000:127.0.0.1:8000 varelq-ocr
+curl -sf http://127.0.0.1:8000/v1/health/ready
 ```
 
-Keep the tunnel open. Text extraction still uses the hosted NVIDIA language model. Custom OCR endpoints receive only NVIDIA_OCR_API_KEY if explicitly configured; the Build key is not forwarded to them. To return to hosted OCR, remove NVIDIA_OCR_URL and restart the app. No automatic fallback hides a failed dedicated endpoint.
+The forward binds 0.0.0.0 only inside the client container; Docker publishes it on host `127.0.0.1:8000` only.
 
-Check readiness at `/v1/health/ready`, upload the public receipt, inspect OCR source text and geometry, then remove the OCR container and stop/delete the environment in Brev. Deleting the environment removes disk data and stops storage charges; export needed results first.
+## App configuration
 
-Official setup: https://docs.nvidia.com/nim/ingestion/image-ocr/latest/getting-started.html
+```
+NVIDIA_OCR_URL=http://127.0.0.1:8000/v1/infer
+NVIDIA_OCR_LABEL="NIM on Brev L4"
+NVIDIA_OCR_FALLBACK=hosted
+```
 
-Supported GPU list: https://docs.nvidia.com/nim/ingestion/image-ocr/latest/support-matrix.html
+`ocr.py` calls the self-hosted endpoint first (20 s timeout, `NVIDIA_OCR_TIMEOUT`). On a connection error,
+timeout or 5xx it retries once on the hosted endpoint and marks the page `fallback_used: true`,
+`endpoint_kind: "hosted"`. 4xx errors are not retried. The Build key is never sent to the self-hosted
+endpoint (only `NVIDIA_OCR_API_KEY`, if set).
+
+## GPU capture for Settings
+
+```bash
+docker exec -i varelq-brev-client ssh varelq-ocr 'bash -s' < deploy/capture-gpu.sh > deploy/gpu-capture.json
+```
+
+`gpu.py` reports this file with its `captured_at`; there is no live probe of the GPU.
+
+Official docs: https://docs.nvidia.com/nim/ingestion/image-ocr/latest/getting-started.html
+
+Teardown: see `HOSTING.md` section 7 (the user does it).

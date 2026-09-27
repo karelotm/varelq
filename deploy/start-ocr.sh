@@ -14,6 +14,9 @@ trap 'rm -rf -- "$DOCKER_CONFIG"; unset NGC_API_KEY' EXIT
 printf '%s' "$NGC_API_KEY" | docker login nvcr.io --username '$oauthtoken' --password-stdin
 docker pull nvcr.io/nim/nvidia/nemotron-ocr-v2:2.0
 mkdir -p "$HOME/.cache/varelq-ocr/cache" "$HOME/.cache/varelq-ocr/weights"
+# The NIM runs as a non-root user; make the bind-mounted cache writable.
+chmod -R 777 "$HOME/.cache/varelq-ocr"
+docker rm -f varelq-ocr >/dev/null 2>&1 || true
 docker run -d --name varelq-ocr --gpus '"device=0"' --shm-size=16g \
   -e NGC_API_KEY -e NIM_ENGINE_MODEL_DOWNLOAD_PROVIDER=ngc \
   -v "$HOME/.cache/varelq-ocr/cache:/opt/cache" \

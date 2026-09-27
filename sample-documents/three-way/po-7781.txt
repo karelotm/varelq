@@ -1,0 +1,13 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-7781
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Atlas Industrial Supply (fictional)
+Order date: 2026-09-10
+Currency: TND
+SKU | Description | Quantity | Unit price | Line total
+SKU-1 | Steel bracket 40mm | 200 | 12.47 | 2494.00
+SKU-2 | Hex bolt M8 zinc | 500 | 0.40 | 200.00
+Net: 2694.00 TND
+VAT rate: 19%
+VAT: 511.86 TND
+Total: 3205.86 TND

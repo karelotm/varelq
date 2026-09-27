@@ -1,0 +1,9 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-7781
+Order reference: PO-7781
+Supplier: Atlas Industrial Supply (fictional)
+Received at: Carthage Fabrication warehouse, 2026-09-18
+SKU | Description | Quantity received
+SKU-1 | Steel bracket 40mm | 180
+SKU-2 | Hex bolt M8 zinc | 500
+Received by: warehouse clerk (fictional)

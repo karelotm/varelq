@@ -1,1 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fafaf9"><meta name="description" content="VARELQ investigates business documents and turns discrepancies into traceable decisions."><title>VARELQ — Operations intelligence</title><link rel="icon" type="image/svg+xml" href="/assets/logo.svg"><link rel="stylesheet" href="/assets/style.css?v=design2"></head><body><div id="app"></div><script type="module" src="/assets/app.js?v=design2"></script></body></html>
+<!doctype html>
+<html lang="en" data-density="comfortable" data-motion="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="VARELQ finds recurring failures in AI operations agents, pins each to the exact step and tool call, and proves the fix.">
+<title>VARELQ</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/reliability.css">
+<script>
+  // Apply saved preferences before first paint to avoid a theme flash.
+  try {
+    var p = JSON.parse(localStorage.getItem('varelq.preferences') || '{}') || {};
+    var r = document.documentElement;
+    if (p.theme === 'light' || p.theme === 'dark') r.setAttribute('data-theme', p.theme);
+    if (p.density === 'compact') r.setAttribute('data-density', 'compact');
+    if (['full', 'reduced', 'off'].indexOf(p.motion) >= 0) r.setAttribute('data-motion', p.motion);
+  } catch (e) { /* storage unavailable */ }
+</script>
+</head>
+<body>
+<div id="app"><noscript>VARELQ needs JavaScript enabled.</noscript></div>
+<script type="module" src="assets/app.js"></script>
+</body>
+</html>

@@ -1,40 +1,102 @@
-# VARELQ — local live workspace
+# VARELQ
 
-This version supersedes the original frontend handover. The running app contains no seeded invoice, supplier, inventory, agent, or reliability results. It starts empty and displays saved real requests. The old sample invoice and trace files have been removed; the original ZIP remains untouched.
+VARELQ finds the hidden failures in AI operations agents. It pins each failure to the exact step and tool call, groups the recurring patterns, ranks them with evidence, and tests the fix twice: first by replaying a guard over the recorded runs, then with a live guarded rerun.
 
-## Start on Windows
+Built for the GOMYCODE × NVIDIA "Come Build with AI" hackathon, 27 September 2026. The submission kit is in [SUBMISSION.md](SUBMISSION.md), and the video script is in [DEMO.md](DEMO.md).
 
-In PowerShell run this command, not the contents of the CMD file:
+> This is a local, single-user prototype with no authentication. The server binds to `127.0.0.1` only. Do not expose it publicly.
 
-```powershell
-& "C:\Users\PC\OneDrive\Documents\ChatGPT\New project\varelq\Launch-Live.cmd"
+## What it does
+
+| Screen | Route | What you see |
+|---|---|---|
+| Findings | `#reliability` | 29 failed τ-bench retail runs (via Microsoft AgentRx) checked by deterministic rules R1–R3. Each group shows its runs affected, severity, an inline priority formula (for example "Critical 3 × 12 runs = 36"), the policy clause it breaks, an explanation written by Nemotron (tagged "Model", or "Template" when the model call fails), a held-out evaluation against the benchmark's reference actions, and a deterministic replay of the guard over the same recorded runs, including the reference-correct writes it would wrongly block |
+| Trace | `#reliability/trace/<id>` | The full conversation and tool-call timeline, scrolled to the flagged step, with the flag reason and the policy clause highlighted |
+| Guard lab | `#lab` | A live Nemotron accounts-payable agent on **synthetic** scenarios: S0 clean control, S1 receiving-record timeout, S3 instruction injected in the invoice, S4 receiving-record timeout with payment pressure. It runs baseline and guarded ×5 each. The `payment_precondition` guard blocks `approve_payment` at dispatch and escalates to a human; it never auto-approves |
+| Overview, Documents, Case | `#overview`, `#documents`, `#cases/<id>` | Three-way invoice / purchase order / receiving record reconciliation. OCR by NVIDIA `nemotron-ocr-v2`, field extraction by Nemotron, and deterministic Python checks, each with its evidence box on the page image |
+| Settings | `#settings` | Theme, density and motion; the models and endpoints in use; OCR mode; a timestamped `nvidia-smi` capture from the Brev L4 (TODO: only once `deploy/gpu-capture.json` exists; until then Settings shows no capture) |
+
+Rules, arithmetic, evaluation and replay are deterministic code. The model explains findings and drives the lab agent. It never decides what is flagged.
+
+## Run it
+
+Requirements: Python 3.12 and an NVIDIA Build API key (https://build.nvidia.com). Without a key, the deterministic parts (rules, evaluation, replay, checks) still run, and model text falls back to templates, tagged "Template".
+
+```bash
+git clone https://github.com/karelotm/varelq.git   # TODO: confirm the URL once the lead pushes
+cd varelq
+python -m pip install -r requirements.txt
 ```
 
-Enter NVIDIA_API_KEY at the hidden terminal prompt. Open http://127.0.0.1:8081/ and keep the terminal open. Alternatively, from this folder run `$env:PORT = '8081'` and then `python .\run.py`. A PowerShell launcher, Launch-Live.ps1, is also provided. Restart the launcher after backend edits. The key stays in the process environment, never in project files. Requires Python 3.12 and the packages in requirements.txt (`python -m pip install -r requirements.txt`).
+PowerShell:
+```powershell
+$env:NVIDIA_API_KEY = "<your key>"      # keep it in the process environment; never commit it
+$env:PORT = "8080"
+python server.py
+```
 
-The unauthenticated development preview runs on port 8080 and cannot make NVIDIA calls. The two ports use the same local database.
+Bash:
+```bash
+NVIDIA_API_KEY="<your key>" PORT=8080 python server.py
+```
 
-## Actual workflows
+Open http://127.0.0.1:8080/. `python run.py` does the same but asks for the key at a hidden prompt.
 
-- Documents: upload an invoice, optionally its actual order and receiving record. NVIDIA extracts line items and source locations. Python checks finite numeric values, arithmetic, printed tax rate, matching order references, unique SKUs, and explicit currencies. Missing information yields skipped checks, never invented values. Original extracted text and location references are inspectable.
-- Investigations: saved results, per-check evidence, incomplete-check warnings, JSON export, editable clarification text, and persisted human review status. Review actions do not release payments or send emails.
-- Reliability: import JSON/JSONL, load recorded VARELQ execution metadata, or explicitly load the public AgentRx benchmark. Analysis occurs only on request through NVIDIA. Duplicate trace IDs are rejected; invented citations invalidate the group; recurrence requires at least two independent runs. Priority is severity weight times independent affected runs. Suggestions are not presented as executed fixes.
-- Overview, suppliers, receiving and execution history derive from stored analyses. There are no timer-based agents or fabricated KPI values.
+### Configuration
 
-Results and extracted source text are saved in data/varelq.sqlite3 (git-ignored, outside the static web directory). Document binaries and API keys are not stored. Saved reports contain the uploaded data; this is a local single-user prototype without authentication. Do not expose its server publicly.
+| Variable | Default | Purpose |
+|---|---|---|
+| `NVIDIA_API_KEY` | none | NVIDIA Build key, read server-side only |
+| `PORT` | `8080` | HTTP port (bound to 127.0.0.1) |
+| `VARELQ_DB` | `data/varelq.sqlite3` | SQLite file for saved runs (git-ignored) |
+| `NVIDIA_MODEL` | `nvidia/nemotron-3-super-120b-a12b` | Explanation and extraction model |
+| `AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` | Guard lab agent model |
+| `NVIDIA_EMBED_MODEL` | `nvidia/nemotron-3-embed-1b` | Embedding model (group cohesion only; groups are not formed by embeddings) |
+| `NVIDIA_BASE_URL` | `https://integrate.api.nvidia.com/v1` | Chat completions endpoint |
+| `NVIDIA_OCR_URL` | hosted `ai.api.nvidia.com` OCR | Set to a self-hosted NIM, for example `http://127.0.0.1:8000/v1/infer` |
+| `NVIDIA_OCR_LABEL` | none | Label shown in the UI, for example `NIM on Brev L4` |
+| `NVIDIA_OCR_FALLBACK` | none | `hosted`: if the self-hosted OCR fails or times out, retry once on the hosted endpoint and mark the page `fallback_used` |
 
-## Public test data
+### Self-hosted OCR on Brev (optional)
 
-public-data/agentrx/ contains Microsoft's AgentRx tau retail failed trajectories, repository MIT license, and a provenance manifest with pinned commit and SHA-256. These are recorded executions in a simulated retail benchmark, not production business records. The loader preserves complete conversation/tool events, excludes ground-truth labels from inference, and currently selects the first five full trajectories within its input budget. All 29 source trajectories remain in the original file. No failure groups are precomputed or seeded.
+During the event, the OCR NIM `nvcr.io/nim/nvidia/nemotron-ocr-v2:2.0` was deployed on a Brev L4 instance, meant to be reached over an SSH tunnel on `127.0.0.1:8000`. TODO: app inference through the tunnel is not verified yet (no run with `endpoint_kind: "self-hosted"` and no `deploy/gpu-capture.json`); so far every OCR call used the hosted endpoint. See [deploy/README.md](deploy/README.md) and `deploy/start-ocr.sh`. Judges do not need this: without `NVIDIA_OCR_URL`, OCR uses the hosted NVIDIA endpoint.
 
-Source: https://github.com/microsoft/AgentRx
+## Verify
 
-Public invoices without matching purchase orders and receipts cannot establish a three-way reconciliation test. Use your actual matched records for that path. The app can analyze an invoice alone and explicitly report unavailable matching checks.
+```bash
+python -m unittest discover -s . -p "test_*.py" -v
+python -c "import server, nim, reliability, agent_lab, guards, tracing, documents, ocr, gpu, samples"
+```
 
-## Verification and limits
+Test count at freeze: `TODO {tests}`. Unit tests use injected fake model responses and temporary databases, never demo data. They do not measure model quality. The live numbers and their run IDs are in the Reliability section of [SUBMISSION.md](SUBMISSION.md) and in [LIVE-VERIFICATION.md](LIVE-VERIFICATION.md).
 
-Run `python -m unittest discover -s . -p 'test_*.py' -v` and `node --check dist/assets/app.js`.
+## Data
 
-Unit/integration checks use isolated model responses and a temporary database, never app seed data. They do not prove NVIDIA model quality. Authenticated NVIDIA calls were verified for document extraction on a public SROIE receipt transcription and reliability analysis on five public AgentRx runs. See LIVE-VERIFICATION.md for results and limits. A full matched invoice/order/receipt set still needs live verification. The browser has verified empty state, public benchmark loading, and visible missing-key failure without fallback results.
+| Data | Source | Licence | Nature |
+|---|---|---|---|
+| `public-data/agentrx/tau_dataset_failed.json` | τ-bench retail trajectories (© 2024 Sierra, https://github.com/sierra-research/tau-bench), republished by Microsoft AgentRx at commit `7a18c79` | MIT (both) | 29 recorded failed runs of an agent in a simulated retail benchmark; users are simulated. No real customer data |
+| `public-data/sroie/` | ICDAR 2019 SROIE receipt 000 via `zzzDavid/ICDAR-2019-SROIE`, commit `27be427` | Repository MIT licence; the original competition dataset terms may also apply | One public receipt image and transcription |
+| `sample-documents/three-way/` | Generated by `sample-documents/generate.py` | Project | Fictional invoice, PO and receiving records |
+| `lab_data/` | Written for the guard lab | Project | Fictional AP scenarios |
 
-Images and scanned PDF pages use NVIDIA hosted GPU OCR, retaining detection geometry and scores for review. Configure a dedicated GPU using deploy/README.md. PDF limits are 30 pages, at most 5 requiring OCR, 60,000 text characters per document; request body limit is 12 MB. No silent content truncation. Trace batches support 1–500 unique IDs and 240,000 JSON characters. Source line membership is validated, but AI interpretation of those lines still requires human review. Discounts, shipping, multiple tax rates, returns/negative amounts, and line-total aggregation need further support. Numeric comparisons currently use a half-cent tolerance; quantity checks are exact. Missing SKU or reference data prevents cross-document checks rather than guessing a match. Stored-run listing is limited to the latest 100 runs. The live failure → automatic fix → rerun workflow is not implemented; suggested fixes are advisory.
+The benchmark's reference actions (`info`, `reward`) are used only for held-out evaluation. They are never sent to the model.
+
+## Security
+
+- The API key is read from the environment only. It is never written to the database, traces, logs or `dist/`.
+- The server binds to `127.0.0.1`, checks the `Host` header on every request and the `Origin` on POST, and sends no CORS headers.
+- Uploaded document binaries are not stored. Sample files are served only from the manifest allow-list.
+- Saved results stay in the local SQLite file, which is git-ignored.
+
+## Layout
+
+| Path | Contents |
+|---|---|
+| `server.py`, `nim.py`, `storage.py`, `run.py` | Standard-library HTTP server, NVIDIA client (JSON mode, retries with backoff, usage metadata), SQLite storage |
+| `reliability.py`, `reliability_rules.md` | Rules R1–R3, policy clauses, held-out evaluation, counterfactual replay, model explanations |
+| `agent_lab.py`, `guards.py`, `tracing.py`, `lab_data/` | Guard lab agent, the `payment_precondition` guard, span tracing |
+| `documents.py`, `ocr.py`, `samples.py`, `gpu.py` | Reconciliation checks, OCR with fallback, sample manifest, GPU status |
+| `dist/` | Frontend: native ES modules, no build step, self-hosted IBM Plex, Lucide icons |
+| `deploy/` | Brev OCR NIM start script and notes |
+
+`HANDOVER.md` is the archived handover from the pre-event baseline. It describes that earlier version, not this one.

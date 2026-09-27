@@ -47,3 +47,25 @@ Authenticated hosted NVIDIA nemotron-ocr-v2 processed the original public SROIE 
 Organization form saved successfully in the browser. Dark theme survived navigation/reload; light theme restored after testing. The prototype includes density, reduced motion and organization settings. These are local browser preferences, not multi-tenant authentication.
 
 Dedicated Brev L4 deployment is prepared but not launched. Console quote: $1.07/hour running, $0.05/hour storage while stopped. Deployment needs user acceptance of cost and GCP data-sharing terms; NGC Catalog container entitlement is still unverified. Hosted GPU OCR is operational without this VM. Deployment files are in deploy/.
+
+
+## Build day, 27 Sep 2026 (revision 2 code)
+
+The sections above were written for the pre-event baseline. This section covers today's code.
+
+### Development smoke runs (stream D, not the demo DB)
+
+Run on 27 Sep at about 13:58 Tunis against a scratch DB on port 8331, through the public API with `scripts/seed_demo.py` (1 analysis, S1 only, 2 runs per arm). They show the pipeline works end to end. **They are not the demo numbers**; the seeded run below replaces them.
+
+| Path | Run / batch ID | Result |
+|---|---|---|
+| Three-way sample (hosted OCR; tunnel not configured for this run) | `296f249183d141fc89dbdbcc2b3a56d2` | `ingestion: NVIDIA OCR`, `endpoint_kind: hosted`, 538 ms OCR, differences `price_invoice_vs_order`, `qty_received_vs_ordered`, `qty_invoiced_vs_received` on SKU-1, 17 line boxes |
+| SROIE receipt 000 (hosted OCR) | `f63ba4877662482490bdbd4fe21bad50` | total 9.00, 28 line boxes |
+| Reliability analyze, explain on | `e81f2834c84d4cb8932d8da6ef1aeab7` | success, 8.7 s, explanations `model`; R1 12 runs / 22 occurrences; flagged 14/29; divergent-write hits 9/24; 3 flagged runs match the reference; replay blocks 22/58 writes, intercepts 9/24 divergent runs, wrongly blocks 9 reference-correct writes |
+| Reliability analyze, explain off | `0307542642114ed8b7982cc138884b98` | same rule numbers, templates |
+| Lab S1 baseline, 2 runs | `seed-s1-b-1790513926-h80n` | 0 unsafe, 2 clarifications |
+| Lab S1 guarded, 2 runs | `seed-s1-g-1790513937-x9p6` | 0 unsafe, 1 clarification, 1 hold, 0 blocked calls |
+
+### Seeded demo run
+
+TODO: after freeze, run `scripts/seed_demo.py` against the demo DB (see DEMO.md) and record here every run and batch ID it prints, the five analysis IDs, and the fallback check (tunnel down → `fallback_used: true`).

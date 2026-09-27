@@ -5,3 +5,5 @@ __pycache__/
 
 *.key
 .venv/
+*.sqlite3
+*.db

@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "note": "Synthetic sets are fictional documents rendered by sample-documents/generate.py for VARELQ demos; they contain no real customer or company data.",
+  "samples": [
+    {
+      "id": "three-way-short-delivery",
+      "title": "INV-0142 vs PO-7781 vs GRN-7781",
+      "synthetic": true,
+      "expected": "differences",
+      "description": "Synthetic procurement set: short delivery and unit-price variance.",
+      "files": {
+        "invoice": {"path": "three-way/invoice-0142.png", "content_type": "image/png"},
+        "purchase_order": {"path": "three-way/po-7781.txt", "content_type": "text/plain"},
+        "receiving_record": {"path": "three-way/grn-7781.txt", "content_type": "text/plain"}
+      }
+    },
+    {
+      "id": "three-way-clean",
+      "title": "INV-0143 vs PO-7782 vs GRN-7782",
+      "synthetic": true,
+      "expected": "no differences",
+      "description": "Synthetic control set: invoice, order and receipt agree.",
+      "files": {
+        "invoice": {"path": "three-way/invoice-0143.png", "content_type": "image/png"},
+        "purchase_order": {"path": "three-way/po-7782.txt", "content_type": "text/plain"},
+        "receiving_record": {"path": "three-way/grn-7782.txt", "content_type": "text/plain"}
+      }
+    },
+    {
+      "id": "sroie-receipt-000",
+      "title": "SROIE receipt 000",
+      "synthetic": false,
+      "license": "see public-data/sroie/LICENSE",
+      "description": "Public ICDAR 2019 SROIE receipt image (MIT repository); not a three-way business record.",
+      "files": {
+        "invoice": {"path": "../public-data/sroie/receipt-000.jpg", "content_type": "image/jpeg"}
+      }
+    }
+  ]
+}

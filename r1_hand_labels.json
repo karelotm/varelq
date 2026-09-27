@@ -1,0 +1,18 @@
+{
+  "dataset": "agentrx-tau-retail",
+  "group_id": "R1",
+  "source": "R1-LABELS.md",
+  "labelled_on": "2026-09-27",
+  "labels": [
+    {"trace_id": "agentrx-tau-12", "step_id": "19.1", "true_violation": true},
+    {"trace_id": "agentrx-tau-20", "step_id": "55.1", "true_violation": false},
+    {"trace_id": "agentrx-tau-20", "step_id": "59.1", "true_violation": true},
+    {"trace_id": "agentrx-tau-20", "step_id": "61.1", "true_violation": false},
+    {"trace_id": "agentrx-tau-38", "step_id": "43.1", "true_violation": false},
+    {"trace_id": "agentrx-tau-55", "step_id": "27.1", "true_violation": true},
+    {"trace_id": "agentrx-tau-55", "step_id": "29.1", "true_violation": true},
+    {"trace_id": "agentrx-tau-59", "step_id": "19.1", "true_violation": false},
+    {"trace_id": "agentrx-tau-59", "step_id": "23.1", "true_violation": true},
+    {"trace_id": "agentrx-tau-71", "step_id": "25.1", "true_violation": false}
+  ]
+}
