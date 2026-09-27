@@ -106,10 +106,16 @@ def make_handler(code, upstream, limiter, ip_header=None):
 
         def login_page(self, message=''):
             note = f'<p role="alert">{html.escape(message)}</p>' if message else ''
+            icon = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='14' "
+                    "fill='%23faf9f5' stroke='%231f1e1d' stroke-width='4'/%3E%3Cpath d='M20 20l12 26 12-26' fill='none' stroke='%231f1e1d' stroke-width='5' "
+                    "stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
             page = ('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-                    '<title>VARELQ demo access</title><style>body{font:14px/20px system-ui,sans-serif;max-width:360px;margin:15vh auto;padding:0 16px;color:#14221b}'
-                    'input,button{font:inherit;height:32px;padding:0 12px;border:1px solid #c5cdc6;border-radius:4px}button{background:#14221b;color:#fff}</style>'
-                    '<h1 style="font-size:20px">VARELQ demo</h1><p>Enter the access code shared by the team.</p>' + note +
+                    f'<link rel="icon" type="image/svg+xml" href="{icon}">'
+                    '<title>VARELQ demo access</title><style>html{background:#faf9f5}body{font:15px/22px system-ui,sans-serif;max-width:380px;margin:18vh auto;padding:0 16px;color:#1f1e1d}'
+                    'h1{font:500 32px/1.1 Georgia,serif;margin:0 0 8px}h1 span{color:#2f6b4f}p{color:#6b6a66}'
+                    'input,button{font:inherit;height:36px;padding:0 12px;border:1px solid #e8e6df;border-radius:8px;background:#fff;color:#1f1e1d}'
+                    'button{background:#1f1e1d;color:#faf9f5;border-color:#1f1e1d;cursor:pointer}</style>'
+                    '<h1>varelq<span>.</span></h1><p>Enter the access code shared by the team.</p>' + note +
                     '<form method="post" action="/__gate"><input name="code" type="password" autocomplete="off" aria-label="Access code" required> '
                     '<button>Continue</button></form>')
             self.reply(401 if message else 200, page, 'text/html; charset=utf-8')
