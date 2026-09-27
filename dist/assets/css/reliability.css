@@ -294,3 +294,16 @@ html[data-motion="off"] .rl-view *, html[data-motion="off"] .rl-view *::after { 
 .rl-metric { box-shadow: none; background: transparent; padding: var(--s3) var(--s3) var(--s3) 0; }
 @media (max-width: 640px) { .rl-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .rl-ba:first-child { box-shadow: none; padding-left: 0; }
+
+/* Imported agent logs (POST /api/agent-failures) */
+.rl-import, .rl-import-result { margin-bottom: var(--s4); }
+.rl-import-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.rl-import-file { position: relative; cursor: pointer; }
+.rl-import-file:focus-within { box-shadow: var(--focus-ring); }
+.rl-import a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.rl-import-group { display: flex; flex-direction: column; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--border); }
+.rl-import-group h3 { margin: 0; font-size: var(--fs-body); font-weight: 500; color: var(--text); display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; overflow-wrap: anywhere; }
+.rl-import-text { margin: 0; font-size: var(--fs-body); color: var(--text); overflow-wrap: anywhere; }
+.rl-import-table td { vertical-align: top; overflow-wrap: anywhere; font-size: var(--fs-xs); line-height: var(--lh-xs); }
+.rl-import-table td:nth-child(4), .rl-import-table td:nth-child(5) { min-width: 16ch; }
+.rl-import-table td:nth-child(1) { min-width: 14ch; } .rl-import-table td:nth-child(2) { min-width: 18ch; overflow-wrap: normal; word-break: break-word; } .rl-import-table td:nth-child(3) { white-space: nowrap; }

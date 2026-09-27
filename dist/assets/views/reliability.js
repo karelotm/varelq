@@ -15,7 +15,130 @@ const S = {
   report: null, reportError: null, notFound: false, datasets: null,
   selected: null, busy: false, runError: null, showAllOcc: false,
   trace: null, traceError: null, traceId: null, flags: [], active: -1,
+  imp: { open: false, fileName: '', rows: null, runs: 0, error: null, busy: false, result: null },
 };
+
+// ---------- imported agent logs (POST /api/agent-failures) ----------
+const IMPORT_REQUIRED = ['trace_id', 'tool', 'status', 'message', 'agent_reply'];
+const IMPORT_MAX_ROWS = 500;
+
+/** Parse a .json array or .jsonl file into contract rows. Throws Error with a readable message. */
+export function parseAgentLogs(text, fileName = '') {
+  const src = String(text || '').replace(/^\uFEFF/, '').trim();
+  if (!src) throw new Error('The file is empty.');
+  let rows;
+  if (src.startsWith('[')) {
+    try { rows = JSON.parse(src); } catch (e) { throw new Error(`Not valid JSON: ${e.message}`); }
+  } else {
+    rows = [];
+    src.split(/\r?\n/).forEach((line, i) => {
+      if (!line.trim()) return;
+      try { rows.push(JSON.parse(line)); } catch { throw new Error(`Line ${i + 1} is not valid JSON${/\.json$/i.test(fileName) ? ' (a .json file must be one array)' : ''}.`); }
+    });
+  }
+  if (!Array.isArray(rows) || !rows.length) throw new Error('No trace rows found. Use a JSON array or one object per line.');
+  if (rows.length > IMPORT_MAX_ROWS) throw new Error(`${num(rows.length)} rows; the limit is ${IMPORT_MAX_ROWS} per import. Split the file.`);
+  const counts = new Map();
+  const out = rows.map((r, i) => {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) throw new Error(`Row ${i + 1} is not an object.`);
+    const missing = IMPORT_REQUIRED.filter(k => typeof r[k] !== 'string');
+    if (missing.length) throw new Error(`Row ${i + 1} is missing text field${missing.length > 1 ? 's' : ''}: ${missing.join(', ')}.`);
+    if (!r.trace_id.trim()) throw new Error(`Row ${i + 1} has an empty trace_id.`);
+    const row = { trace_id: r.trace_id.trim(), tool: r.tool, status: r.status, message: r.message, agent_reply: r.agent_reply };
+    for (const k of ['user_message', 'timestamp', 'run_id']) if (typeof r[k] === 'string') row[k] = r[k];
+    row.run_id = row.run_id || row.trace_id;
+    counts.set(row.trace_id, (counts.get(row.trace_id) || 0) + 1);
+    return row;
+  });
+  // One row per tool call: repeated trace_ids are steps of one run. Give each step a unique id and keep the run.
+  const seen = new Map();
+  out.forEach(row => {
+    if (counts.get(row.trace_id) > 1) {
+      const n = (seen.get(row.trace_id) || 0) + 1;
+      seen.set(row.trace_id, n);
+      row.trace_id = `${row.trace_id} · step ${n}`;
+    }
+  });
+  return { rows: out, runs: new Set(out.map(r => r.run_id)).size };
+}
+
+function importPanel() {
+  const I = S.imp;
+  if (!I.open && !I.result) return '';
+  const summary = I.rows ? `<p class="rl-caption">${esc(I.fileName)}: ${plural(I.rows.length, 'step', 'steps')} from ${plural(I.runs, 'run', 'runs')}.</p>` : '';
+  const form = I.open ? `<section class="rl-panel rl-import" aria-label="Import agent logs">
+    <div class="rl-panel-head"><h2>Import agent logs</h2><button type="button" class="rl-btn rl-btn--ghost" data-action="import-close">Close</button></div>
+    <p class="rl-caption">A JSON array (.json) or one object per line (.jsonl). Each row is one tool call with text fields <strong>trace_id</strong>, <strong>tool</strong>, <strong>status</strong>, <strong>message</strong> (the tool result) and <strong>agent_reply</strong>; <strong>timestamp</strong> and <strong>user_message</strong> are optional. Rows that share a trace_id are steps of one run. Up to ${IMPORT_MAX_ROWS} rows. <a href="assets/examples/agent-logs-example.jsonl" download="agent-logs-example.jsonl">Download example</a></p>
+    <div class="rl-import-row">
+      <label class="rl-btn rl-btn--secondary rl-import-file">${svgIcon('upload', 16)}<span>${I.fileName ? 'Choose another file' : 'Choose file'}</span><input type="file" accept=".json,.jsonl,application/json" data-import-file class="rl-sr"></label>
+      ${btn('Analyse with NVIDIA', { action: 'import-run', primary: true, busy: I.busy, disabled: !I.rows })}
+    </div>
+    ${summary}
+    ${I.busy ? `<div class="rl-busy" role="status" aria-live="polite"><div class="rl-indeterminate" aria-hidden="true"></div><span>Nemotron is grouping recurring failures; every cited step is checked against your file…</span></div>` : ''}
+    ${I.error ? errorRow(I.error) : ''}
+  </section>` : '';
+  return `${form}${I.result ? importResult(I.result) : ''}`;
+}
+
+function importResult(r) {
+  const issues = Array.isArray(r.issues) ? r.issues : [];
+  const cell = v => `<td>${esc(v || '—')}</td>`;
+  const body = issues.map(g => `<article class="rl-import-group">
+      <div class="rl-panel-head"><h3>${badge(g.severity, sevTone(g.severity))} ${esc(g.title)}</h3>
+        <span class="rl-caption">${plural(g.run_count, 'run', 'runs')} affected${g.priority_score !== undefined ? ` · priority ${num(g.priority_score)}` : ''}</span></div>
+      ${g.explanation ? `<p class="rl-import-text">${esc(g.explanation)}</p>` : ''}
+      ${g.fix ? `<p class="rl-import-text"><span class="rl-muted">Suggested fix:</span> ${esc(g.fix)}</p>` : ''}
+      <div class="rl-table-wrap"><table class="rl-table rl-import-table">
+        <caption class="rl-sr">Cited steps for ${esc(g.title)}</caption>
+        <thead><tr><th scope="col">Step</th><th scope="col">Tool</th><th scope="col">Status</th><th scope="col">Message</th><th scope="col">Agent reply</th></tr></thead>
+        <tbody>${(g.evidence || []).map(e => `<tr>${cell(e.trace_id)}${cell(e.tool)}${cell(e.status)}${cell(e.message)}${cell(e.agent_reply)}</tr>`).join('')}</tbody>
+      </table></div>
+    </article>`).join('');
+  const rejected = Number(r.rejected_groups) > 0 ? ` · ${plural(r.rejected_groups, 'model group', 'model groups')} dropped (unknown steps cited or only one run)` : '';
+  return `<section class="rl-panel rl-import-result" aria-label="Imported logs analysis">
+    <div class="rl-panel-head"><h2>Imported logs</h2><div class="rl-tags">${badge('Imported logs', 'info')}${tag('model', 'grouping, evidence-checked')}</div></div>
+    <p class="rl-caption">${esc(r.source_label || 'Imported traces')} · ${plural(r.trace_count, 'step', 'steps')} analysed${r.model ? ` · ${esc(r.model)}` : ''}${rejected}</p>
+    ${issues.length ? body : emptyState('No recurring failure across two or more runs was confirmed in these logs.')}
+  </section>`;
+}
+
+function paintImport(root) {
+  const slot = root.querySelector('[data-slot="import"]');
+  if (slot) slot.innerHTML = importPanel();
+}
+
+async function readImportFile(root, file) {
+  const I = S.imp;
+  I.error = null; I.rows = null; I.runs = 0; I.fileName = file ? file.name : '';
+  if (file) {
+    try {
+      if (!/\.(json|jsonl)$/i.test(file.name)) throw new Error('Choose a .json or .jsonl file.');
+      if (file.size > 5e6) throw new Error('The file is larger than 5 MB.');
+      const parsed = parseAgentLogs(await file.text(), file.name);
+      I.rows = parsed.rows; I.runs = parsed.runs;
+    } catch (e) { I.error = e.message; }
+  }
+  paintImport(root);
+}
+
+async function runImport(root) {
+  const I = S.imp;
+  if (I.busy || !I.rows) return;
+  I.busy = true; I.error = null; paintImport(root);
+  try {
+    const res = await fetch('/api/agent-failures', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ logs: I.rows, source_label: `Imported logs: ${I.fileName}` }) });
+    let body = null;
+    try { body = await res.json(); } catch { body = null; }
+    if (!res.ok) throw new Error((body && body.error) || `Analysis failed (HTTP ${res.status}).`);
+    if (!body || !Array.isArray(body.issues)) throw new Error('The server returned an unreadable analysis.');
+    I.result = body;
+  } catch (e) {
+    I.error = e && e.name === 'TypeError' ? 'The VARELQ server is not reachable.' : (e.message || 'Analysis failed.');
+  } finally {
+    I.busy = false;
+    paintImport(root);
+  }
+}
 
 // ---------- data shaping (pure) ----------
 export function sortGroups(groups) {
@@ -258,7 +381,8 @@ function findingsHtml() {
     ? btn('Re-run analysis', { action: 'analyze', busy: S.busy, icon: 'rotate-ccw' })
     : btn('Run analysis', { action: 'analyze', primary: true, busy: S.busy, icon: 'play' });
   const desc = r ? `Failure patterns in ${plural(r.run_count, 'recorded τ-bench run', 'recorded τ-bench runs')}.` : 'Failure patterns in recorded τ-bench runs.';
-  const head = header('Findings', r ? chips : `${provChip(prov)}${chips}`, action, desc);
+  const importBtn = btn('Import agent logs', { action: 'import-open', icon: 'upload' });
+  const head = `${header('Findings', r ? chips : `${provChip(prov)}${chips}`, `${importBtn}${action}`, desc)}<div data-slot="import">${importPanel()}</div>`;
   const runDetails = `<details class="rl-details rl-run-details"><summary>${svgIcon('chevron-right', 14)}Run details</summary><div class="rl-run-details-body">${provChip(prov) ? `<div class="rl-tags">${provChip(prov)}</div>` : ''}${r ? evalStrip(r) : ''}</div></details>`;
   const busyLine = S.busy ? `<div class="rl-busy" role="status" aria-live="polite"><div class="rl-indeterminate" aria-hidden="true"></div><span>Running rules over ${ds ? plural(ds.runs, 'recorded run', 'recorded runs') : 'the recorded runs'} and asking Nemotron to explain each group…</span></div>` : '<div class="rl-busy" role="status" aria-live="polite"></div>';
   const runErr = S.runError ? errorRow(S.runError, 'analyze') : '';
@@ -431,6 +555,9 @@ export function mount(root, ctx) {
     if (a && root.contains(a)) {
       const act = a.dataset.action;
       if (act === 'analyze') return runAnalysis(root, ctx);
+      if (act === 'import-open') { S.imp.open = true; paintImport(root); const f = root.querySelector('.rl-import'); if (f) scrollToEl(f); return; }
+      if (act === 'import-close') { S.imp.open = false; S.imp.error = null; return paintImport(root); }
+      if (act === 'import-run') return runImport(root);
       if (act === 'reload') { await loadFindings(); return paint(root, findingsHtml()); }
       if (act === 'reload-trace') { await loadTrace(S.traceId); if (S.trace) { S.flags = flagList(S.trace.steps); S.active = initialFlag(S.flags, {}); } paint(root, traceHtml()); return focusActive(root); }
       if (act === 'toggle-occ') {
@@ -465,11 +592,17 @@ export function mount(root, ctx) {
   root.addEventListener('click', onClick);
   root.addEventListener('keydown', onKey);
   root.addEventListener('toggle', onToggle, true);
+  const onChange = e => {
+    const input = e.target.closest && e.target.closest('[data-import-file]');
+    if (input && root.contains(input)) readImportFile(root, input.files && input.files[0]);
+  };
+  root.addEventListener('change', onChange);
   if (currentMode === 'trace' && S.flags.length) requestAnimationFrame(() => focusActive(root));
   return () => {
     offExpand();
     root.removeEventListener('click', onClick);
     root.removeEventListener('keydown', onKey);
     root.removeEventListener('toggle', onToggle, true);
+    root.removeEventListener('change', onChange);
   };
 }

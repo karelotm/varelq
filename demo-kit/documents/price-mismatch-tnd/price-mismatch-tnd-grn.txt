@@ -1,0 +1,10 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9104
+Order reference: PO-9104
+Supplier: Sahel Electrique (fictional)
+Received at: Carthage Fabrication warehouse, 2026-08-22
+SKU | Description | Quantity received
+CB-2.5 | Cable H07V-U 2.5mm2 100m | 12
+DJ-16 | Circuit breaker 16A | 30
+BX-12 | Junction box IP55 | 50
+Received by: warehouse clerk (fictional)

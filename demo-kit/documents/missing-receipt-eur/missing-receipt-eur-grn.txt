@@ -1,0 +1,9 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9108
+Order reference: PO-9108
+Supplier: Porto Ferragens Lda (fictional)
+Received at: Carthage Fabrication warehouse, 2026-09-04
+SKU | Description | Quantity received
+HG-35 | Cabinet hinge 35mm | 200
+DH-128 | Drawer handle 128mm | 120
+Received by: warehouse clerk (fictional)

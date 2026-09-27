@@ -1,0 +1,14 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9104
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Sahel Electrique (fictional)
+Order date: 2026-07-28
+Currency: TND
+SKU | Description | Quantity | Unit price | Line total
+CB-2.5 | Cable H07V-U 2.5mm2 100m | 12 | 89.000 | 1068.000
+DJ-16 | Circuit breaker 16A | 30 | 14.800 | 444.000
+BX-12 | Junction box IP55 | 50 | 6.250 | 312.500
+Net: 1824.500 TND
+VAT rate: 19%
+VAT: 346.655 TND
+Total: 2171.155 TND

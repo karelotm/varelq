@@ -1,0 +1,14 @@
+SYNTHETIC SAMPLE - NOT A REAL PURCHASE ORDER - VARELQ DEMO DATA
+PURCHASE ORDER PO-9108
+Buyer: Carthage Fabrication SARL (fictional)
+Supplier: Porto Ferragens Lda (fictional)
+Order date: 2026-07-28
+Currency: EUR
+SKU | Description | Quantity | Unit price | Line total
+HG-35 | Cabinet hinge 35mm | 200 | 1.85 | 370.00
+DH-128 | Drawer handle 128mm | 120 | 3.40 | 408.00
+SL-450 | Drawer slide 450mm pair | 60 | 9.90 | 594.00
+Net: 1372.00 EUR
+VAT rate: 23%
+VAT: 315.56 EUR
+Total: 1687.56 EUR

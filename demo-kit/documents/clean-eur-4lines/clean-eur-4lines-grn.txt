@@ -1,0 +1,11 @@
+SYNTHETIC SAMPLE - NOT A REAL GOODS RECEIPT - VARELQ DEMO DATA
+GOODS RECEIVED NOTE GRN-9102
+Order reference: PO-9102
+Supplier: Rhone Hydraulique SAS (fictional)
+Received at: Carthage Fabrication warehouse, 2026-08-11
+SKU | Description | Quantity received
+HY-101 | Hydraulic hose 1/2in 2m | 25
+HY-205 | Quick coupler steel | 60
+HY-310 | Pressure gauge 250bar | 6
+HY-412 | O-ring kit NBR | 10
+Received by: warehouse clerk (fictional)

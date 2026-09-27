@@ -1,0 +1,17 @@
+CORD v2 sample (10 receipts, test split rows 0-9)
+
+Source: naver-clova-ix/cord-v2 on Hugging Face
+  https://huggingface.co/datasets/naver-clova-ix/cord-v2
+  Pinned revision: 7f0115a4b758a71d6473b8d085751692da2fef98
+  File: data/test-00000-of-00001-9c204eb3f4e11791.parquet
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+  https://creativecommons.org/licenses/by/4.0/
+
+Attribution: Park, Seunghyun; Shin, Seung; Lee, Bado; Lee, Junyeop; Surh, Jaeheung;
+Seo, Minjoon; Lee, Hwalsuk. "CORD: A Consolidated Receipt Dataset for Post-OCR
+Parsing." Document Intelligence Workshop at NeurIPS 2019. NAVER Clova.
+
+Changes: images saved as served by the HF datasets-server for each row; the
+ground_truth JSON string was parsed and re-serialized with an added "expected"
+block (menu nm/cnt/price, sub_total, total). No receipt content was altered.

@@ -1,0 +1,131 @@
+{
+  "note": "Copied from sample-documents/manifest.json (synthetic, generated in-repo; no third-party data).",
+  "samples": [
+    {
+      "id": "eval-clean-eur-4lines",
+      "title": "FA-26-0588 vs PO-9102 vs GRN-9102",
+      "synthetic": true,
+      "expected": "no differences",
+      "expected_findings": [],
+      "description": "Synthetic eval set (clean control); EUR, 4 invoice line(s); degraded scan.",
+      "files": {
+        "invoice": {
+          "path": "eval/clean-eur-4lines-invoice.jpg",
+          "content_type": "image/jpeg"
+        },
+        "purchase_order": {
+          "path": "eval/clean-eur-4lines-po.txt",
+          "content_type": "text/plain"
+        },
+        "receiving_record": {
+          "path": "eval/clean-eur-4lines-grn.txt",
+          "content_type": "text/plain"
+        }
+      },
+      "degradation": {
+        "rotation_deg": 1.2,
+        "blur": "gaussian radius 0.8-1.2",
+        "jpeg_quality": 35,
+        "paper": "grey tint + noise",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "eval-price-mismatch-tnd",
+      "title": "INV-2004 vs PO-9104 vs GRN-9104",
+      "synthetic": true,
+      "expected": "differences",
+      "expected_findings": [
+        {
+          "kind": "price_mismatch",
+          "sku": "CB-2.5",
+          "invoice": "92.500",
+          "po": "89.000",
+          "delta_total": "42.000"
+        }
+      ],
+      "description": "Synthetic eval set (planted: price_mismatch); TND, 3 invoice line(s); degraded scan.",
+      "files": {
+        "invoice": {
+          "path": "eval/price-mismatch-tnd-invoice.jpg",
+          "content_type": "image/jpeg"
+        },
+        "purchase_order": {
+          "path": "eval/price-mismatch-tnd-po.txt",
+          "content_type": "text/plain"
+        },
+        "receiving_record": {
+          "path": "eval/price-mismatch-tnd-grn.txt",
+          "content_type": "text/plain"
+        }
+      },
+      "degradation": {
+        "rotation_deg": 2.01,
+        "blur": "gaussian radius 0.8-1.2",
+        "jpeg_quality": 35,
+        "paper": "grey tint + noise",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "eval-over-invoicing-mad",
+      "title": "F2026-1203 vs PO-9106 vs GRN-9106",
+      "synthetic": true,
+      "expected": "differences",
+      "expected_findings": [
+        {
+          "kind": "over_invoicing",
+          "sku": "WG-L",
+          "invoiced": 260,
+          "ordered": 200,
+          "received": 200,
+          "delta_qty": 60
+        }
+      ],
+      "description": "Synthetic eval set (planted: over_invoicing); MAD, 3 invoice line(s).",
+      "files": {
+        "invoice": {
+          "path": "eval/over-invoicing-mad-invoice.png",
+          "content_type": "image/png"
+        },
+        "purchase_order": {
+          "path": "eval/over-invoicing-mad-po.txt",
+          "content_type": "text/plain"
+        },
+        "receiving_record": {
+          "path": "eval/over-invoicing-mad-grn.txt",
+          "content_type": "text/plain"
+        }
+      }
+    },
+    {
+      "id": "eval-missing-receipt-eur",
+      "title": "FA-26-0640 vs PO-9108 vs GRN-9108",
+      "synthetic": true,
+      "expected": "differences",
+      "expected_findings": [
+        {
+          "kind": "missing_receiving_record",
+          "sku": "SL-450",
+          "invoiced": 60,
+          "received": null
+        }
+      ],
+      "description": "Synthetic eval set (planted: missing_receiving_record); EUR, 3 invoice line(s).",
+      "files": {
+        "invoice": {
+          "path": "eval/missing-receipt-eur-invoice.png",
+          "content_type": "image/png"
+        },
+        "purchase_order": {
+          "path": "eval/missing-receipt-eur-po.txt",
+          "content_type": "text/plain"
+        },
+        "receiving_record": {
+          "path": "eval/missing-receipt-eur-grn.txt",
+          "content_type": "text/plain"
+        }
+      }
+    }
+  ]
+}
