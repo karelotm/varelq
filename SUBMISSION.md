@@ -38,7 +38,7 @@ GOMYCODE × NVIDIA "Come Build with AI", 27 September 2026. Deadline 17:30 Tunis
 
 **Secondary (checkboxes), one line each** *(form boxes)*:
 - **SupplyzPro** (if not primary): "Step-level detection in conversations and tool calls, groups tied to rule IDs, an inline priority formula, evidence one click away, and a replay proof that reports its own false blocks."
-- **Thunders Engineering Excellence:** "Tested and measured: 115 automated tests; 5/5 live analyses succeeded in an earlier batch today with latency and retries recorded (13 HTTP 429s, one 503); rate-limited lab runs were recorded as errors, not hidden, and calls are now paced; every number tied to a run ID."
+- **Thunders Engineering Excellence:** "Tested and measured: 152 automated tests; accuracy measured against ground truth (ACCURACY.md); 5/5 live analyses succeeded in an earlier batch today with latency and retries recorded (13 HTTP 429s, one 503); rate-limited lab runs were recorded as errors, not hidden, and calls are now paced; every number tied to a run ID."
 - **Artefact Data & AI:** "Recorded agent runs become prioritised findings, scored against held-out benchmark reference actions (hits and false positives), with replay rates that report their own false blocks and baseline-vs-guarded lab rates."
 - **Guepard AI Automation:** "A guarded agent workflow: the payment guard blocks unsafe approvals at dispatch and escalates to a human; it never auto-approves."
 - **Yassir:** tick only if the team is in Morocco and the brief fits after reading it. Otherwise skip.

@@ -29,10 +29,6 @@ TITLE_HTML = """
   <div style="font-family:'IBM Plex Sans',sans-serif;font-size:40px;line-height:1.3;color:#5e5d59;margin-top:22px">evidence before decisions</div>
 </div>"""
 
-# Cosmetic only: the local viewer runs without an NVIDIA key, so the provenance chips
-# would read "no key". The recorded data shown was produced with the key configured.
-HIDE_CHIPS_CSS = '#chips { visibility: hidden !important; }'
-
 SMOOTH_SCROLL_JS = """([y, ms]) => new Promise(done => {
   const from = window.scrollY, to = Math.max(0, Math.min(y, document.documentElement.scrollHeight - innerHeight));
   const t0 = performance.now();
@@ -46,7 +42,8 @@ SMOOTH_SCROLL_JS = """([y, ms]) => new Promise(done => {
 
 
 class Walkthrough:
-    def __init__(self, page, timings, shots: Path):
+    def __init__(self, page, timings, shots: Path, case_id=None):
+        self.case_id = case_id
         self.page = page
         self.segs = {s['n']: s for s in timings['segments']}
         self.title_card = timings['title_card']
@@ -136,19 +133,28 @@ class Walkthrough:
         # 5. Case view: INV-0142 three-way check, opened from the overview's case list
         start = self.now(); end = self.begin(5)
         self.scroll_to(0, 500)
-        p.click('a[data-nav="overview"]')
-        p.wait_for_selector(f'text={CASE_REF}')
-        p.wait_for_timeout(700)
-        p.click(f'tr:has-text("{CASE_REF}"), a:has-text("{CASE_REF}")')
-        p.wait_for_selector('text=Invoiced vs received')
-        self.at(start, 0.62, 5)
-        p.click('.tab[data-role]:has-text("Receipt")')   # the goods receipt: 180 arrived
+        if self.case_id:
+            self.go(f'#cases/{self.case_id}', 'text=Invoiced vs received')
+        else:
+            p.click('a[data-nav="overview"]')
+            p.wait_for_selector(f'text={CASE_REF}')
+            p.wait_for_timeout(700)
+            p.click(f'tr:has-text("{CASE_REF}"), a:has-text("{CASE_REF}")')
+            p.wait_for_selector('text=Invoiced vs received')
+        # stay on the Invoice tab: its footer shows the OCR provenance (provider, GPU, latency)
         self.hold_until(end, 5)
 
         # 6. Close on the overview: top pattern, S4 5/5 -> 0/5, cases
         start = self.now(); end = self.begin(6)
         p.click('a[data-nav="overview"]')
         p.wait_for_selector(f'text={CASE_REF}')
+        # one quick glance at the shell: the Ctrl+K search palette
+        self.at(start, 0.35, 6)
+        p.keyboard.press('Control+K')
+        p.wait_for_timeout(2200)
+        p.screenshot(path=str(self.shots / 'seg6-palette.png'))
+        p.keyboard.press('Escape')
+        p.evaluate('document.activeElement && document.activeElement.blur()')  # no focus ring on the close
         self.hold_until(end, 6)
         self.marks['end'] = round(self.now(), 3)
         return self.marks
@@ -157,7 +163,8 @@ class Walkthrough:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', required=True)
-    ap.add_argument('--url', default='http://127.0.0.1:8396/')
+    ap.add_argument('--url', default='http://127.0.0.1:8396/', help='base URL of the VARELQ app')
+    ap.add_argument('--case-id', help='case run to open in segment 5 (default: click INV-0142 on the overview)')
     args = ap.parse_args()
     out = Path(args.out)
     timings = json.loads((out / 'audio' / 'timings.json').read_text(encoding='utf-8'))
@@ -174,11 +181,14 @@ def main():
         ctx.add_init_script("localStorage.setItem('varelq.preferences', JSON.stringify({theme:'light',density:'comfortable',motion:'full'}))")
         ctx.route('**/*', lambda r: r.abort() if r.request.method != 'GET' else r.continue_())
         page = ctx.new_page()
-        walk = Walkthrough(page, timings, out / 'shots')   # t0 ~ start of the video
+        walk = Walkthrough(page, timings, out / 'shots', args.case_id)   # t0 ~ start of the video
         page.goto(args.url + '#overview')
-        page.add_style_tag(content=HIDE_CHIPS_CSS)
         page.wait_for_selector(f'text={CASE_REF}')
         page.evaluate('document.fonts.ready')
+        skip = page.locator('button:has-text("Skip")')   # first-visit tour, if the build has one
+        if skip.count():
+            skip.first.click()
+            page.wait_for_timeout(400)
         marks = walk.run()
         video = page.video.path()
         ctx.close()

@@ -16,7 +16,8 @@ All tools are open source and are installed in a separate virtualenv, not in the
 - `record.py` logs when each screen actually appears (`marks.json`); `make_video.py` places each audio
   segment and caption at those marks, so voice and picture stay in sync.
 - The recording aborts every non-GET request, so it never starts a run or records a decision.
-  It hides the provenance chips in the top bar (the viewer runs without an NVIDIA key; the data was recorded with one).
+- `record.py --url <base> --case-id <run id>` records another deployment and opens a specific case run in segment 5.
+- The TTS input says "Varel Q" for VARELQ (clearer pronunciation); captions keep "VARELQ".
 
 ## Run
 

@@ -24,6 +24,8 @@ import edge_tts
 import imageio_ffmpeg
 
 ROOT = Path(__file__).resolve().parents[2]
+# Spoken form of the product name; captions keep "VARELQ".
+SAY = {'VARELQ': 'Varel Q'}
 PAD = 0.6            # seconds of silence kept after each segment's audio
 TITLE_CARD = 1.5     # seconds of title card before segment 1 (dropped if total would exceed 90s)
 MAX_TOTAL = 90.0
@@ -57,7 +59,10 @@ def media_duration(path: Path) -> float:
 
 async def speak(text: str, voice: str, rate: int, mp3: Path):
     """Synthesize text to mp3 and return sentence boundaries [(start_s, end_s, text)]."""
-    comm = edge_tts.Communicate(text, voice, rate=f'{rate:+d}%', boundary='SentenceBoundary')
+    spoken = text
+    for written, said in SAY.items():
+        spoken = spoken.replace(written, said)
+    comm = edge_tts.Communicate(spoken, voice, rate=f'{rate:+d}%', boundary='SentenceBoundary')
     sentences = []
     with mp3.open('wb') as f:
         async for chunk in comm.stream():
@@ -65,7 +70,10 @@ async def speak(text: str, voice: str, rate: int, mp3: Path):
                 f.write(chunk['data'])
             elif chunk['type'] in ('SentenceBoundary', 'WordBoundary'):
                 start = chunk['offset'] / 1e7
-                sentences.append([start, start + chunk['duration'] / 1e7, chunk['text']])
+                caption = chunk['text']
+                for written, said in SAY.items():
+                    caption = caption.replace(said, written)
+                sentences.append([start, start + chunk['duration'] / 1e7, caption])
     return sentences
 
 

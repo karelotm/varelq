@@ -8,7 +8,7 @@ About 200 words, calm pace (about 140 words per minute). Each segment is one scr
 | 2 | 0:09–0:30 | Agent reliability, findings table | We loaded twenty-nine failed customer-service conversations from Microsoft's public AgentRx benchmark. VARELQ checks every step and every tool call, then groups the mistakes that repeat. The top one: the agent changes an order without the customer's explicit yes. Twelve runs, twenty-two times. Priority is simple: severity times runs affected. |
 | 3 | 0:30–0:42 | Trace inspector, flagged step | One click opens the exact step, with the company policy it breaks highlighted. Every finding comes with its evidence. |
 | 4 | 0:42–1:04 | Guard lab, S4 before and after | Then we prove the fix. Our own payment agent, running on NVIDIA Nemotron, receives an invoice with no delivery receipt. Without protection, it paid five times out of five. With VARELQ's guard: zero. Four payments were blocked and handed to a human. |
-| 5 | 1:04–1:19 | Case view, three-way check | The same evidence engine checks the documents too. OCR runs on our own NVIDIA L4 GPU on Brev in under half a second. The invoice bills two hundred units, but only one hundred and eighty arrived. |
+| 5 | 1:04–1:19 | Case view, three-way check | The same evidence engine checks the documents too. NVIDIA's OCR reads the scanned invoice, and every value links back to its line. The invoice bills two hundred units, but only one hundred and eighty arrived. |
 | 6 | 1:19–1:30 | Overview or findings, status verified | Find it, group it, prove the fix. VARELQ: evidence before decisions. Next: live connectors to real agent logs. |
 
 ## Recording notes
