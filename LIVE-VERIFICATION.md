@@ -68,4 +68,32 @@ Run on 27 Sep at about 13:58 Tunis against a scratch DB on port 8331, through th
 
 ### Seeded demo run
 
-TODO: after freeze, run `scripts/seed_demo.py` against the demo DB (see DEMO.md) and record here every run and batch ID it prints, the five analysis IDs, and the fallback check (tunnel down → `fallback_used: true`).
+Recorded 27 Sep 2026. Demo DB served on port 8390; values read back through `GET /api/runs`, `/api/reliability/latest`, `/api/lab/batches` and `/api/lab/batches/{id}`.
+
+**Seeding.** `scripts/seed_demo.py` (13:47–13:53 UTC) seeded both documents and one analysis, then timed out on an HTTP read during the first lab batch, so `seed-output.json` is empty; IDs below come from `seed.log` and the API. Only **1** analysis run is in the demo DB.
+
+| Path | Run / batch ID | Result |
+|---|---|---|
+| Three-way sample | `f3d8d8bb317c496f9c52550c45d6eb10` | hosted OCR, 980 ms, `fallback_used: false`; `price_invoice_vs_order`, `qty_received_vs_ordered`, `qty_invoiced_vs_received` on SKU-1 (invoiced 200, received 180); 17 line boxes; total 3213.00 TND |
+| SROIE receipt 000 | `1230f004874c419d8f963ce5057d4a87` | hosted OCR, 536 ms; total 9.00 RM; 28 line boxes |
+| Reliability analyze, explain on | `4c29b27e491b4451ac6128bfafef8228` | success, 8,563 ms total; explanations `model`; retries `{429: 2}`; R1 12 runs / 22 occurrences; flagged 14/29; divergent-write hits 9/24; 3 flagged runs match the reference; replay blocks 22/58 writes, intercepts 9/24 divergent runs, wrongly blocks 9 of 33 reference-correct writes. First 10 R1 items match `R1-LABELS.md` |
+| Lab S4 baseline | `b-probe-s4-b-fb59` | 5/5 unsafe (5 approvals), 0 errors |
+| Lab S4 guarded | `b-http-s4-guard` | 0/5 unsafe; 4 blocked calls, 4 escalations, 4 clarifications, 1 hold, 0 errors |
+| Lab S1 baseline | `b-http-s1-base` | 0/5 unsafe; 4 clarifications, 1 hold |
+| Lab S1 guarded | `b-http-s1-guard` | 0/5 unsafe; 4 clarifications; 1 error ("Run time budget of 55s exhausted") |
+| Lab S0, S3 | none | not in demo seed |
+
+All four lab batches are live runs of `nvidia/nemotron-3-super-120b-a12b` on NVIDIA's hosted API, recorded 12:52–12:57 UTC on synthetic scenario data.
+
+**Earlier batch today (separate scratch DB, seeded 13:35 UTC).** 5/5 analyses succeeded: `8bc602cff74e493bb311cb11a58e46b8`, `1f7f377e6e6a4205a80fafee662d6088`, `16420c552bb04feaa06b3399494156ab`, `854e3823407649719ca65647cf7ff8aa`, `1381e902ccdc4fcf8037a0bd2ec22cfe`. Median latency 21,803 ms; rule groups identical across the 5; retries `{429: 13, 503: 1}`.
+
+**Reliability issues found.**
+- In that same seeding, a 40-run lab burst (S0, S1, S3, S4 × baseline/guarded × 5) hit sustained HTTP 429 on the trial key for `nemotron-3-super-120b`. All 40 runs were recorded as errors, not hidden. Pacing was added in `29d8211` (`LAB_RUN_BUDGET_S=150`, lab concurrency 2 in `deploy/start-app.sh`).
+- The hosted smoke test found that the app called the self-hosted OCR NIM at `/v1/infer`; the NIM serves `/v1/ocr`. Fixed in `fe2bb05`.
+- OCR fallback is covered by unit tests only; the demo DB has no page with `fallback_used: true`.
+
+**Tests.** `python -m unittest discover -s . -p "test_*.py"`: 115 tests, OK.
+
+**Commits today** (after the Codex baseline `a8ed47b`, 12:02 UTC): `c3aeeb2` 13:23 UTC rebuild; `29d8211` 13:47 UTC pacing; `fe2bb05` 13:53 UTC OCR route fix. Repo: https://github.com/karelotm/varelq (public).
+
+**Hosting.** Public demo on the Brev L4 behind an access-code gate via a Cloudflare quick tunnel; the app and the nemotron-ocr-v2 NIM run on the L4, and LLM calls go to hosted NVIDIA Build. The URL and code are shared in the form only. App-side OCR on the L4 verified at 13:59 UTC (14:59 Tunis): three-way-short-delivery through the public app, run `be1bba179ec54a7f96494e14da4cc5af`, `endpoint_kind: self-hosted`, provider "NIM on Brev L4" (`nvcr.io/nim/nvidia/nemotron-ocr-v2:2.0`), 458 ms, `fallback_used: false`, 3 differences (price vs order, received vs ordered, invoiced vs received), 16.8 s wall time. A measurement, not a speed comparison.

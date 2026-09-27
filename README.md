@@ -5,6 +5,8 @@ VARELQ finds the hidden failures in AI operations agents. It pins each failure t
 Built for the GOMYCODE × NVIDIA "Come Build with AI" hackathon, 27 September 2026. The submission kit is in [SUBMISSION.md](SUBMISSION.md), and the video script is in [DEMO.md](DEMO.md).
 
 > This is a local, single-user prototype with no authentication. The server binds to `127.0.0.1` only. Do not expose it publicly.
+>
+> The public demo for judges runs on a Brev L4 behind an access-code gate with rate limits (`deploy/gate.py`) and a Cloudflare quick tunnel; see [deploy/HOSTING.md](deploy/HOSTING.md). The URL and access code are shared in the submission form, not in this repo.
 
 ## What it does
 
@@ -14,7 +16,7 @@ Built for the GOMYCODE × NVIDIA "Come Build with AI" hackathon, 27 September 20
 | Trace | `#reliability/trace/<id>` | The full conversation and tool-call timeline, scrolled to the flagged step, with the flag reason and the policy clause highlighted |
 | Guard lab | `#lab` | A live Nemotron accounts-payable agent on **synthetic** scenarios: S0 clean control, S1 receiving-record timeout, S3 instruction injected in the invoice, S4 receiving-record timeout with payment pressure. It runs baseline and guarded ×5 each. The `payment_precondition` guard blocks `approve_payment` at dispatch and escalates to a human; it never auto-approves |
 | Overview, Documents, Case | `#overview`, `#documents`, `#cases/<id>` | Three-way invoice / purchase order / receiving record reconciliation. OCR by NVIDIA `nemotron-ocr-v2`, field extraction by Nemotron, and deterministic Python checks, each with its evidence box on the page image |
-| Settings | `#settings` | Theme, density and motion; the models and endpoints in use; OCR mode; a timestamped `nvidia-smi` capture from the Brev L4 (TODO: only once `deploy/gpu-capture.json` exists; until then Settings shows no capture) |
+| Settings | `#settings` | Theme, density and motion; the models and endpoints in use; OCR mode; a timestamped `nvidia-smi` capture from the Brev L4, shown only when `deploy/gpu-capture.json` exists (it is not in the repo yet, so Settings shows no capture) |
 
 Rules, arithmetic, evaluation and replay are deterministic code. The model explains findings and drives the lab agent. It never decides what is flagged.
 
@@ -23,7 +25,7 @@ Rules, arithmetic, evaluation and replay are deterministic code. The model expla
 Requirements: Python 3.12 and an NVIDIA Build API key (https://build.nvidia.com). Without a key, the deterministic parts (rules, evaluation, replay, checks) still run, and model text falls back to templates, tagged "Template".
 
 ```bash
-git clone https://github.com/karelotm/varelq.git   # TODO: confirm the URL once the lead pushes
+git clone https://github.com/karelotm/varelq.git
 cd varelq
 python -m pip install -r requirements.txt
 ```
@@ -59,7 +61,7 @@ Open http://127.0.0.1:8080/. `python run.py` does the same but asks for the key 
 
 ### Self-hosted OCR on Brev (optional)
 
-During the event, the OCR NIM `nvcr.io/nim/nvidia/nemotron-ocr-v2:2.0` was deployed on a Brev L4 instance, meant to be reached over an SSH tunnel on `127.0.0.1:8000`. TODO: app inference through the tunnel is not verified yet (no run with `endpoint_kind: "self-hosted"` and no `deploy/gpu-capture.json`); so far every OCR call used the hosted endpoint. See [deploy/README.md](deploy/README.md) and `deploy/start-ocr.sh`. Judges do not need this: without `NVIDIA_OCR_URL`, OCR uses the hosted NVIDIA endpoint.
+During the event, the OCR NIM `nvcr.io/nim/nvidia/nemotron-ocr-v2:2.0` was deployed on a Brev L4 instance, next to the public demo app, which reaches it at `http://127.0.0.1:8000/v1/ocr` on the VM with hosted fallback (`deploy/start-app.sh`). Language-model calls go to hosted NVIDIA Build. App inference through the L4 NIM was verified at 13:59 UTC on 27 Sep: run `be1bba179ec54a7f96494e14da4cc5af` through the public app, `endpoint_kind: self-hosted`, 458 ms, `fallback_used: false` (see the Brev section of [SUBMISSION.md](SUBMISSION.md)). The local demo-DB runs used the hosted endpoint. See [deploy/README.md](deploy/README.md) and `deploy/start-ocr.sh`. Judges do not need this: without `NVIDIA_OCR_URL`, OCR uses the hosted NVIDIA endpoint.
 
 ## Verify
 
@@ -68,7 +70,7 @@ python -m unittest discover -s . -p "test_*.py" -v
 python -c "import server, nim, reliability, agent_lab, guards, tracing, documents, ocr, gpu, samples"
 ```
 
-Test count at freeze: `TODO {tests}`. Unit tests use injected fake model responses and temporary databases, never demo data. They do not measure model quality. The live numbers and their run IDs are in the Reliability section of [SUBMISSION.md](SUBMISSION.md) and in [LIVE-VERIFICATION.md](LIVE-VERIFICATION.md).
+Test count at commit `fe2bb05`: 115, all passing. Unit tests use injected fake model responses and temporary databases, never demo data. They do not measure model quality. The live numbers and their run IDs are in the Reliability section of [SUBMISSION.md](SUBMISSION.md) and in [LIVE-VERIFICATION.md](LIVE-VERIFICATION.md).
 
 ## Data
 
