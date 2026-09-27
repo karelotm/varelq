@@ -85,11 +85,14 @@ def model_provenance(exc=None):
             'fallback_reason': fallbacks[0].get('fallback_reason') if fallbacks else None}
 
 
+NIM_JSON_SEED = 42  # fixed seed + temperature 0: repeat extractions of the same document should match
+
+
 def nim_json(system, user, *, reasoning=False):
     """Legacy helper kept for documents.analyze and /api/agent-failures; wraps nim.chat_json."""
     try:
         obj, meta = nim.chat_json([{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
-                                  model=MODEL, max_tokens=8192, temperature=0.1, thinking=reasoning,
+                                  model=MODEL, max_tokens=8192, temperature=0, seed=NIM_JSON_SEED, thinking=reasoning,
                                   max_thinking_tokens=2048, timeout=120)
     except nim.NimError as exc:
         if isinstance(getattr(exc, 'meta', None), dict) and hasattr(_CALL_METAS, 'items'):

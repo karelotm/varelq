@@ -66,6 +66,16 @@ class ServerTests(unittest.TestCase):
         self.assertIn('reason', body['gpu'])
         self.assertEqual(self.req('GET', '/api/usage', host=f'evil.example:{self.port}')[0], 400)
 
+    def test_nim_json_is_deterministic(self):
+        seen = {}
+        def fake(messages, **kw):
+            seen.update(kw)
+            return {'ok': 1}, {'model': server.MODEL}
+        with patch.object(server.nim, 'chat_json', fake):
+            server.nim_json('s', 'u')
+        self.assertEqual(seen['temperature'], 0)
+        self.assertEqual(seen['seed'], server.NIM_JSON_SEED)
+
     def test_model_provenance_names_actual_model(self):
         server.begin_model_calls()
         meta = {'model': 'nvidia/nemotron-3.5-lightning-30b-a3b', 'requested_model': server.MODEL,

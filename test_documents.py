@@ -183,5 +183,13 @@ class SampleTests(unittest.TestCase):
         self.assertIsNone(samples.match('three-way-clean', 'receiving_record', b'other'))
 
 
+
+class PromptTests(unittest.TestCase):
+    def test_net_only_when_printed(self):
+        # SROIE receipt 000 prints no net/subtotal; 2 of 4 runs invented net=9.0 before this rule.
+        p = documents.PROMPT.lower()
+        self.assertIn('net only if a line labelled net, subtotal', p)
+        self.assertIn('otherwise net is null', p)
+
 if __name__ == '__main__':
     unittest.main()

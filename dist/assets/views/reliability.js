@@ -147,6 +147,18 @@ function occurrenceList(g) {
   return `<ul class="rl-occ-list">${li}</ul>${more}`;
 }
 
+// Lab guards and the datasets (domains) they actually apply to. payment_precondition gates
+// approve_payment in the supplier-payment lab; it is not a retail guard, so it is never linked from retail rules.
+const LAB_GUARD_DATASETS = { payment_precondition: ['agent-lab'] };
+function guardApplies(guardId, report) {
+  const ds = report && report.dataset;
+  return Boolean(guardId && ds && (LAB_GUARD_DATASETS[guardId] || []).includes(ds));
+}
+function cohesionValue(coh) {
+  const v = coh.mean_pairwise_cosine !== undefined ? coh.mean_pairwise_cosine : coh.value;
+  return typeof v === 'number' ? v.toFixed(2) : '';
+}
+
 function detailPanel(g, report) {
   if (!g) return `<aside class="rl-side">${emptyState('Select a pattern to see its evidence.')}</aside>`;
   const c = g.policy_clause;
@@ -165,9 +177,9 @@ function detailPanel(g, report) {
         <blockquote class="rl-quote">${esc(c.text)}</blockquote></div>` : ''}
       ${g.explanation ? `<div class="rl-section"><div class="rl-section-head"><span class="rl-label">Explanation</span>${sourceTag(g.explanation_source)}</div><p>${esc(g.explanation)}</p></div>` : ''}
       ${g.fix ? `<div class="rl-section"><div class="rl-section-head"><span class="rl-label">Suggested fix</span>${sourceTag(g.fix_source, 'fix')}</div><p>${esc(g.fix)}</p></div>` : ''}
-      ${coh ? `<div class="rl-kv"><span class="rl-label">Cohesion</span><span>${esc(coh.value !== undefined ? num(coh.value) : '')} <span class="rl-muted">${esc(coh.method || '')}</span></span></div>` : ''}
+      ${coh ? `<div class="rl-kv"><span class="rl-label">Cohesion</span><span title="${esc(coh.note || 'Mean pairwise cosine similarity of the occurrences')}"><span class="rl-mono">${esc(cohesionValue(coh))}</span>${typeof coh.min_pairwise_cosine === 'number' ? ` <span class="rl-muted">(min ${esc(coh.min_pairwise_cosine.toFixed(2))})</span>` : ''} <span class="rl-muted">similarity, not accuracy${coh.method ? ` · ${esc(coh.method)}` : ''}</span></span></div>` : ''}
       ${guard ? `<div class="rl-section"><div class="rl-section-head"><span class="rl-label">Suggested guard</span></div>
-        <p>${esc(cap(guard.family))}</p>${guard.lab_guard_id ? `<a class="rl-btn rl-btn--secondary" href="#lab?guard=${esc(encodeURIComponent(guard.lab_guard_id))}">${svgIcon('flask-conical', 16)}<span>Test the guard in the lab</span></a>` : ''}</div>` : ''}
+        <p>${esc(cap(guard.family))}</p>${guardApplies(guard.lab_guard_id, report) ? `<a class="rl-btn rl-btn--secondary" href="#lab?guard=${esc(encodeURIComponent(guard.lab_guard_id))}">${svgIcon('flask-conical', 16)}<span>Test the guard in the lab</span></a>` : `<p class="rl-muted">No lab guard for this rule yet.</p>`}</div>` : ''}
       <div class="rl-section"><div class="rl-section-head"><span class="rl-label">Occurrences</span>${tag('recorded')}</div>${occurrenceList(g)}</div>
     </div>
   </aside>`;

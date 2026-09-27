@@ -91,6 +91,45 @@ function sortedLines(lines) {
   });
 }
 
+/* ---------- OCR review labels ---------- */
+// The OCR score is the reader's own per-line score, not a probability of being right.
+// Spot check (ACCURACY.md): every line under 0.80 was wrong; 0.80-0.90 was mixed; 0.90+ was right 98% of the time.
+const OCR_LEGEND = "OCR review labels come from the reader's own score; they are warnings, not probabilities.";
+function ocrScorePct(score) { return `${Math.round(score * 1000) / 10}%`; }
+/** 'verify' | 'check' | null for a per-line OCR score. */
+export function ocrReviewLevel(score) {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return null;
+  if (score < 0.80) return 'verify';
+  if (score < 0.90) return 'check';
+  return null;
+}
+/** Soft pill for a line score: red "Verify" below 0.80, amber "Check" for 0.80-0.90, nothing at 0.90+. */
+function ocrReviewPill(score) {
+  const level = ocrReviewLevel(score);
+  if (level === 'verify') return badge('Verify', 'danger', { className: 'ocr-review', title: `Low OCR score (${ocrScorePct(score)}). Every line under 80% was wrong in our spot check; check the source.` });
+  if (level === 'check') return badge('Check', 'warning', { className: 'ocr-review', title: `OCR score ${ocrScorePct(score)} (not a probability). Lines scoring 80-90% were sometimes misread in our spot check; check the source.` });
+  return '';
+}
+function ocrScoreTitle(score) {
+  return typeof score === 'number' ? `OCR score ${ocrScorePct(score)} (not a probability)` : '';
+}
+/** Lowest OCR score over a field cell's evidence lines, or null. */
+function cellOcrScore(run, role, cell) {
+  if (!cell || !Array.isArray(cell.evidence)) return null;
+  let worst = null;
+  for (const ev of cell.evidence) {
+    if (!ev || !ev.location) continue;
+    const b = (((run.sources || {})[ev.document || role] || {}).line_boxes || {})[ev.location];
+    if (b && typeof b.confidence === 'number' && (worst === null || b.confidence < worst)) worst = b.confidence;
+  }
+  return worst;
+}
+/** Verify pill for a header field (e.g. invoice reference) when its source line scored below 0.80. */
+function fieldVerifyPill(run, role, key) {
+  const score = cellOcrScore(run, role, ((run.fields || {})[role] || {})[key]);
+  return ocrReviewLevel(score) === 'verify' ? ocrReviewPill(score) : '';
+}
+
 /* ---------- viewer ---------- */
 function viewerHtml(run, role, location) {
   const src = (run.sources || {})[role];
@@ -114,13 +153,14 @@ function viewerHtml(run, role, location) {
   }
 
   const ocrPage = Array.isArray(src.ocr_pages) ? src.ocr_pages.find((p) => p.page === page) || src.ocr_pages[0] : null;
-  const conf = sel && typeof sel.confidence === 'number' ? ` · OCR confidence ${pct(sel.confidence, 1)}` : '';
+  const selScore = sel && typeof sel.confidence === 'number' ? sel.confidence : null;
+  const lineTitle = selScore !== null ? ` title="${esc(ocrScoreTitle(selScore))}"` : '';
   const evidence = location
-    ? `<div class="evidence-line"><div class="row wrap text-xs muted"><span>Line <span class="mono">${esc(location)}</span>${esc(conf)}</span></div><div class="quote">${selectedText ? esc(selectedText) : '<span class="subtle">Line text not available</span>'}</div></div>`
+    ? `<div class="evidence-line"><div class="row wrap text-xs muted"><span${lineTitle}>Line <span class="mono">${esc(location)}</span></span>${ocrReviewPill(selScore)}</div><div class="quote">${selectedText ? esc(selectedText) : '<span class="subtle">Line text not available</span>'}</div></div>`
     : '';
 
   const listHtml = lines.length
-    ? `<ul class="line-list" id="line-list">${lines.map(([loc, text]) => `<li data-loc="${esc(loc)}" class="${loc === location ? 'sel' : ''}"><span class="loc">${esc(loc.replace(/^p\d+:/, ''))}</span><span>${esc(text)}</span></li>`).join('')}</ul>`
+    ? `<ul class="line-list" id="line-list">${lines.map(([loc, text]) => { const sc = boxes[loc] ? boxes[loc].confidence : null; return `<li data-loc="${esc(loc)}" class="${loc === location ? 'sel' : ''}"${typeof sc === 'number' ? ` title="${esc(ocrScoreTitle(sc))}"` : ''}><span class="loc">${esc(loc.replace(/^p\d+:/, ''))}</span><span>${esc(text)} ${ocrReviewPill(sc)}</span></li>`; }).join('')}</ul>`
     : empty('No text lines were extracted.');
   const list = img
     ? `<details class="disclosure"><summary>${icon('chevron-right', 16, 'chev')}All lines <span class="subtle">${esc(num(lines.length))}</span></summary>${listHtml}</details>`
@@ -138,7 +178,8 @@ function viewerHtml(run, role, location) {
   if (src.sample) metaParts.push(tag('synthetic', { text: 'Sample file' }));
   const metaLine = `<div class="ocr-meta"><span class="mono">${esc(src.filename || '')}</span>${metaParts.join('<span class="subtle">·</span>')}</div>`;
 
-  return `${visual}${evidence}${metaLine}${list}`;
+  const legend = `<div class="text-xs muted ocr-legend">${esc(OCR_LEGEND)}</div>`;
+  return `${visual}${evidence}${metaLine}${legend}${list}`;
 }
 
 function tabsHtml(run, active) {
@@ -200,21 +241,20 @@ function fieldRows(run) {
 }
 
 function fieldsTable(run) {
-  const rows = fieldRows(run);
+  const rows = fieldRows(run).map((r) => ({ ...r, score: cellOcrScore(run, r.role, r.cell) }));
   return table({
     ariaLabel: 'Extracted fields',
     columns: [
       { key: 'role', label: 'Document', render: (r) => esc(ROLE_TAB[r.role] || humanize(r.role)) },
       { key: 'field', label: 'Field', render: (r) => esc(r.field) },
-      { key: 'value', label: 'Value', render: (r) => (r.cell.value === null || r.cell.value === undefined ? `<span class="subtle">Not found</span>` : `<span class="mono break">${esc(r.cell.value)}</span>`) },
+      { key: 'value', label: 'Value', render: (r) => (r.cell.value === null || r.cell.value === undefined ? `<span class="subtle">Not found</span>` : `<span class="mono break">${esc(r.cell.value)}</span>${ocrReviewLevel(r.score) === 'verify' ? ` ${ocrReviewPill(r.score)}` : ''}`) },
       { key: 'line', label: 'Source line', render: (r) => {
         const ev = (r.cell.evidence || [])[0];
         return ev ? `<button type="button" class="btn btn-ghost btn-sm mono" data-action="show-line" data-role="${esc(ev.document || r.role)}" data-loc="${esc(ev.location)}">${esc(ev.location)}</button>` : `<span class="subtle">${EMPTY}</span>`;
       } },
-      { key: 'conf', label: 'OCR conf.', align: 'right', render: (r) => {
-        const ev = (r.cell.evidence || [])[0];
-        const b = ev && r.boxes[ev.location];
-        return b && typeof b.confidence === 'number' ? `<span class="tabular">${esc(pct(b.confidence, 1))}</span>` : `<span class="subtle">${EMPTY}</span>`;
+      { key: 'ocr', label: 'OCR review', align: 'right', render: (r) => {
+        if (r.score === null) return `<span class="subtle">${EMPTY}</span>`;
+        return ocrReviewPill(r.score) || `<span class="subtle" title="${esc(ocrScoreTitle(r.score))}">${EMPTY}</span>`;
       } },
     ],
     rows,
@@ -248,8 +288,8 @@ export async function render(ctx) {
   const head = `
 <div class="page-head sticky">
   <div class="titles">
-    <h1 title="${esc(run.supplier || '')}">${esc(run.supplier || 'Supplier unavailable')}</h1>
-    <div class="meta"><span id="decision-badge">${decisionBadge(decision)}</span>${run.invoice_reference ? `<span class="tabular">${esc(run.invoice_reference)}</span><span class="subtle">·</span>` : ''}<span class="tabular">${esc(money(run.invoice_total, run.currency))}</span><span class="subtle">·</span><span title="Case ${esc(run.id)}">Created ${esc(relTime(run.created))}</span>${run.stub ? tag('stub') : ''}</div>
+    <h1 title="${esc(run.supplier || '')}">${esc(run.supplier || 'Supplier unavailable')}${run.supplier ? ` ${fieldVerifyPill(run, 'invoice', 'supplier')}` : ''}</h1>
+    <div class="meta"><span id="decision-badge">${decisionBadge(decision)}</span>${run.invoice_reference ? `<span class="tabular">${esc(run.invoice_reference)}</span>${fieldVerifyPill(run, 'invoice', 'reference')}<span class="subtle">·</span>` : ''}<span class="tabular">${esc(money(run.invoice_total, run.currency))}</span>${fieldVerifyPill(run, 'invoice', 'total')}<span class="subtle">·</span><span title="Case ${esc(run.id)}">Created ${esc(relTime(run.created))}</span>${run.stub ? tag('stub') : ''}</div>
   </div>
   <div class="actions">
     <button type="button" class="btn btn-secondary" data-action="decide" data-decision="needs_clarification"${decision === 'needs_clarification' ? ' aria-pressed="true"' : ''}>Request clarification</button>
@@ -273,7 +313,7 @@ export async function render(ctx) {
   <div role="tabpanel" id="case-tabs-panel" aria-labelledby="case-tabs-tab-${detailTab}">
   ${pane('differences', `<div id="diff-table">${differencesTable(run, state.key)}</div>`)}
   ${pane('documents', `<div class="sub-head">Extracted fields</div>${fieldsTable(run)}`)}
-  ${pane('evidence', `<div class="sub-head">All checks</div>${checksList(run)}${limCount ? `<div class="sub-head bordered">Not checked</div>${limitationsList(run)}` : ''}`)}
+  ${pane('evidence', `<div class="sub-head">All checks</div><p class="text-xs muted ocr-legend">${esc(OCR_LEGEND)}</p>${checksList(run)}${limCount ? `<div class="sub-head bordered">Not checked</div>${limitationsList(run)}` : ''}`)}
   </div>
 </section>`;
 
