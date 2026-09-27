@@ -22,6 +22,33 @@ Built for the GOMYCODE × NVIDIA "Come Build with AI" hackathon, 27 September 20
 
 Rules, arithmetic, evaluation and replay are deterministic code. The model explains findings and drives the lab agent. It never decides what is flagged.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Overview](docs/screenshots/overview.png) **Overview**: recurring agent failures, guard result, cases to review | ![Agent reliability](docs/screenshots/agent-reliability.png) **Agent reliability**: failures grouped by rule, priority = severity × runs, verified policy clause |
+| ![Trace inspector](docs/screenshots/trace-inspector.png) **Trace inspector**: the exact failing step in the conversation and tool calls | ![Guard lab](docs/screenshots/guard-lab.png) **Guard lab**: same scenario without / with the guard, 5/5 → 0/5 unsafe payments |
+| ![Case view](docs/screenshots/case-three-way.png) **Case view**: invoice / order / receipt check, invoiced 200 vs received 180, source line boxed on the scan | ![Search](docs/screenshots/search.png) **Search** (Ctrl+K): jump to any page, case, finding or lab batch |
+
+Screens from the running app on the seeded demo data (synthetic invoices are labelled as such on the document).
+
+## Stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Reasoning model | NVIDIA Nemotron 3 Super 120B (NVIDIA Build API) | Field extraction, finding explanations, the guard-lab agent, the data chat, grouping of imported logs |
+| Fallback model | NVIDIA Nemotron 3.5 Lightning 30B | Used automatically when the 120B is rate-limited; the model that answered is recorded on every run |
+| OCR | NVIDIA `nemotron-ocr-v2` NIM, self-hosted on a Brev L4 GPU; NVIDIA hosted OCR as fallback | Reads scans and photos with a score per line, which drives the "Verify" / "Check" labels |
+| Embeddings | NVIDIA `nemotron-3-embed-1b` | Similarity inside failure groups |
+| Backend | Python 3.12 standard library HTTP server, SQLite | No framework; every check, rule, replay and metric is deterministic Python |
+| Frontend | Native ES modules, no build step; self-hosted IBM Plex and Source Serif 4; inline SVG icons | Readable source, served as-is |
+| Hosting (demo) | Brev L4 VM, Docker, access-code gate with rate limits, Cloudflare quick tunnel | One box for the app and the OCR NIM |
+| Tooling | `unittest` (156 tests), Playwright + edge-tts for the demo video | |
+
+## License
+
+Code: [MIT](LICENSE). Datasets and fonts keep their own licences, listed in [LICENSE](LICENSE) and in the Data section below.
+
 ## Run it
 
 Requirements: Python 3.12 and an NVIDIA Build API key (https://build.nvidia.com). Without a key, the deterministic parts (rules, evaluation, replay, checks) still run, and model text falls back to templates, tagged "Template".
